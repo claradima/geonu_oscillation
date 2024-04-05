@@ -18,7 +18,7 @@ import os #need this to save the plots
 # adjust grid size here -- bigger grid_count, finer grid
 
 
-grid_count = 250
+grid_count = 50
 coordinates = np.linspace(-6371, 6371, grid_count)
 x_coordinates, y_coordinates, z_coordinates = np.meshgrid(coordinates, coordinates, coordinates)
 
@@ -245,6 +245,7 @@ Th_integral_values, U_integral_values = integral_over_positions_Th_U(mantle_crus
 #make plots
 
 #Thorium
+plt.figure()
 plt.plot(energy_array, Th_integral_values, marker='o', linestyle='-', color='b')
 plt.xlabel('Energy [MeV]')
 plt.ylabel('Integral value')
@@ -255,16 +256,19 @@ if not os.path.exists('plots'):
 
 # Save the plot with the title as the filename
 plt.savefig('plots/Th_Int_standard_grid_' + str(grid_count) + '.png')
+plt.close()
 
 #Uranium
+plt.figure()
 plt.plot(energy_array, U_integral_values, marker='o', linestyle='-', color='r')
 plt.xlabel('Energy [MeV]')
 plt.ylabel('Integral value')
 plt.title('Integral over emission position, Uranium')
 plt.savefig('plots/U_Int_standard_grid' + str(grid_count) + '.png')
+plt.close()
 
 #Both together
-
+plt.figure()
 plt.plot(energy_array, Th_integral_values, marker='o', linestyle='-', color='b', label='Thorium')
 plt.plot(energy_array, U_integral_values, marker='o', linestyle='-', color='r', label='Uranium')
 plt.xlabel('Energy [MeV]')
@@ -272,6 +276,7 @@ plt.ylabel('Integral value')
 plt.title('Integral over emission position')
 plt.legend()
 plt.savefig('plots/U_Th_Int_standard_grid' + str(grid_count) + '.png')
+plt.close()
 
 
 ### IMPORTANT !!! ###
