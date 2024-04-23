@@ -1,0 +1,13 @@
+Some notes about numpy
+
+	Using np.empty instead of np.zeros is faster; puts in random values
+	
+	If you multiply or divide arrays of the same size, operation done element 
+	by element
+	
+	axis 0 for rows, axis 1 for columns
+	
+	Broadcasting is a mechanism that allows numpy to perform operations on 
+	arrays of different shapes, if the shapes are compatible
+	
+	

@@ -18,7 +18,7 @@ import os #need this to save the plots
 # adjust grid size here -- bigger grid_count, finer grid
 
 
-grid_count = 50
+grid_count = 150
 coordinates = np.linspace(-6371, 6371, grid_count)
 x_coordinates, y_coordinates, z_coordinates = np.meshgrid(coordinates, coordinates, coordinates)
 
@@ -239,6 +239,8 @@ grid_1d_size = coordinates[1] - coordinates[0]
 print(grid_1d_size)  
 
 #calculate integral arrays
+
+print('Computing integral values')
 
 Th_integral_values, U_integral_values = integral_over_positions_Th_U(mantle_crust_grid, energy_array, grid_1d_size, theta_12, delta_m_21_squared, A_Th_array, A_U_array, rho_array)
 

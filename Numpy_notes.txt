@@ -1,0 +1,4 @@
+Some notes about numpy
+
+	Using np.empty instead of np.zeros is faster; puts in random values
+	
