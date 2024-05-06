@@ -19,7 +19,7 @@ x_coordinates, y_coordinates, z_coordinates = np.meshgrid(coordinates, coordinat
 distances_squared = x_coordinates ** 2 + y_coordinates ** 2 + z_coordinates ** 2
 
 # Find indices where distance is less than or equal to the radius squared
-crust_indices = np.logical_and(6369 ** 2 < distances_squared, distances_squared <= 6371 ** 2)
+crust_indices = np.logical_and(6350 ** 2 < distances_squared, distances_squared <= 6371 ** 2)
 
 # Extract valid coordinates using boolean indexing
 crust_grid = np.stack((x_coordinates[crust_indices], y_coordinates[crust_indices], z_coordinates[crust_indices]),
