@@ -1,3 +1,5 @@
+30 September 2024
+
 Hello!
 
 In this logbook, I am tracking what I did in this folder. My goal is to optimize memory allocation so that I can decrease the distance between the points in my Earth grid. 
@@ -13,3 +15,7 @@ So, "Optimized Memory_v1.ipynb" is supposed to produce the same plots as "Mantle
 One first thing to check is that I added all these contributions correctly : I used chatgpt to write things for all the different sublayers, I should have not done this. The first thing I will do is check that these things were correct. I will replace the loops written by chatgpt with "manual" summations and hope that this fixes things.
 
 However, if it does not fix things, things are REALLY FUCKED! This is because things are already split in layers in "Mantle layering.ipynb". Not as many, yes, but layers nevertheless! DM is even split into two! So if the issue is not with summing up the components, but with the splitting in general, it basically means that most of the results I showed so far are messed up. But! It also means that I will be forced to reorganize my code nicely and debug, which is great and beautiful. 
+
+18:55 pm: I changed all the for loops summing over things with regular sums (with a looooot of terms);  I used chatgpt again, but I checked it and they are indeed all the same; I'll run both codes and see how it goes!
+
+19:08: Still messed up! See exhibit 1 for example; I have to do the whole code fixing!!! Will do that tomorrow though
