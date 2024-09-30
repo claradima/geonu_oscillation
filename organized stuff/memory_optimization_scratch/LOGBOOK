@@ -1,0 +1,13 @@
+Hello!
+
+In this logbook, I am tracking what I did in this folder. My goal is to optimize memory allocation so that I can decrease the distance between the points in my Earth grid. 
+
+When I was running my code before, I noticed that if I try to compute the DM grid all at once, it ran into memory issues, however, if I tried splitting it into two different layers (whose contributions I just add up later), it didn't complain. So, I wanted to extend this idea further, and use the smaller distance grid with even more sub layers (whose contributions are added up at the end).
+
+Ok, this all sounds great in principle! The first step was to still use 20km for the crust and 50km for the mantle, and check that all the plots obtained are excatly the same (and they should be - we are adding up the same things, we just split them into smaller chunks). I tried doing this in "Optimized Memory_v1.ipynb", while "Optimized Memory_v0.ipynb" was kept to do the same thing, but with the mantle grid size adjusted to 20km.
+
+So, "Optimized Memory_v1.ipynb" is supposed to produce the same plots as "Mantle layering.ipynb", but the issue is that it doesn't! I tried to make it so that the only difference between these is that DM and EM are split into more sublayers.
+
+One first thing to check is that I added all these contributions correctly : I used chatgpt to write things for all the different sublayers, I should have not done this. The first thing I will do is check that these things were correct. I will replace the loops written by chatgpt with "manual" summations and hope that this fixes things.
+
+However, if it does not fix things, things are REALLY FUCKED! This is because things are already split in layers in "Mantle layering.ipynb". Not as many, yes, but layers nevertheless! DM is even split into two! So if the issue is not with summing up the components, but with the splitting in general, it basically means that most of the results I showed so far are messed up. But! It also means that I will be forced to reorganize my code nicely and debug, which is great and beautiful. 
