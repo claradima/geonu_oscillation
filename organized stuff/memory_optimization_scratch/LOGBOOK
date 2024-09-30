@@ -2,6 +2,8 @@ Hello!
 
 In this logbook, I am tracking what I did in this folder. My goal is to optimize memory allocation so that I can decrease the distance between the points in my Earth grid. 
 
+The "Mantle layering.ipynb" file is copied from this folder's parent folder (organized stuff)
+
 When I was running my code before, I noticed that if I try to compute the DM grid all at once, it ran into memory issues, however, if I tried splitting it into two different layers (whose contributions I just add up later), it didn't complain. So, I wanted to extend this idea further, and use the smaller distance grid with even more sub layers (whose contributions are added up at the end).
 
 Ok, this all sounds great in principle! The first step was to still use 20km for the crust and 50km for the mantle, and check that all the plots obtained are excatly the same (and they should be - we are adding up the same things, we just split them into smaller chunks). I tried doing this in "Optimized Memory_v1.ipynb", while "Optimized Memory_v0.ipynb" was kept to do the same thing, but with the mantle grid size adjusted to 20km.
