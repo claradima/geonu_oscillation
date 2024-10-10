@@ -19,3 +19,9 @@ However, if it does not fix things, things are REALLY FUCKED! This is because th
 18:55 pm: I changed all the for loops summing over things with regular sums (with a looooot of terms);  I used chatgpt again, but I checked it and they are indeed all the same; I'll run both codes and see how it goes!
 
 19:08: Still messed up! See exhibit 1 for example; I have to do the whole code fixing!!! Will do that tomorrow though
+
+7 October 2024
+
+I fixed some typos and now the wiggles are still sidderent but the overall values are almost the same so I'll work with that. The difference might be a precision issue (that I don't understand but whatever ... I don't really like that the result depends strongly on this)
+
+I can run it up until a grid of 550 points in 1d but then it gets killed. I tried to do a bunch of things to get around this, running it as a python script in terminal instead of jupyter notebook, running in browser, i don't know ... i tried running on the hpc, had to make a venv to install dependencies, lots of things but it gets killed even faster on the hpc so i don't think that's the solution
