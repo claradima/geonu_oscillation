@@ -33,7 +33,7 @@ import matplotlib.pyplot as plt
 import sys
 print("imports successful")
 
-grid_count_mantle = 550 # would need 637.1 for 20 km spacing
+grid_count_mantle = 400 # would need 637.1 for 20 km spacing
 #320 for 40 km spacing
 #285 for 45 km spacing
 #215 for 60km spacing
