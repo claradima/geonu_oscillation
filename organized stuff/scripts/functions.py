@@ -5,6 +5,7 @@ import gc
 import psutil
 import os
 import argparse
+import csv
 
 
 ### Prints current memory usage ###
@@ -449,8 +450,7 @@ def calc_P_ee(energy_array, points_array, theta_12, theta_13, delta_m_21_squared
 ### relative distances directly rather than the points array
 ### Can do this because we only care about distance really
 
-def vol_integral(points_array, energy_array, grid_1d_size, theta_12, delta_m_21_squared, A_Th, A_U,
-                                 rho):
+def vol_integral(points_array, energy_array, grid_1d_size, theta_12, delta_m_21_squared, A_Th, A_U, rho):
     dV = grid_1d_size ** 3
 
     relative_distance_array = calc_relative_dist(points_array)
@@ -477,6 +477,43 @@ def vol_integral(points_array, energy_array, grid_1d_size, theta_12, delta_m_21_
     get_memory_usage()
 
     return sum_Th, sum_U
+
+
+### Adds up volume integrals for sublayers in a layer
+###
+### inputs : same as vol_integrals, except points_array;
+###          instead, array of sets of points (so
+###          grids_array[i] has the same format as points_array
+###
+### returns : total_Th, total_U : values of integral for Th,
+###           U respectively for whole layer made up of
+###           sublayers
+###
+### NOTE : Layers should be quite easy too add, there shouldn't
+###        be that many of them so not really worth adding a
+###        function to add them up? (perhaps TO DO)
+###
+### TO DO : Test this when you get the final script!! compare
+###         plots with plots made with Optimized_Memory_v4.ipynb
+
+def add_vol_integrals(grids_array, energy_array, grid_1d_size, theta_12, delta_m_21_squared, A_Th, A_U, rho):
+
+    print('adding contributions from sublayers')
+    total_Th = np.zeros(energy_array)
+    total_U = np.zeros(energy_array)
+
+    for i in range(len(grids_array)):
+        integral_Th, integral_U = vol_integral(grids_array[i], energy_array, grid_1d_size, theta_12, delta_m_21_squared,A_Th, A_U, rho)
+        total_Th = total_Th + integral_Th
+        total_U = total_U + integral_U
+
+        print(f'added contribution from sublayer {i}')
+
+    print(' ')
+    print('full layer contribution computed')
+
+    return total_Th, total_U
+
 
 ### Calculate volume integral from geonu flux formula, use
 ### P_ee = constant as an approximation
@@ -546,6 +583,49 @@ def vol_integral_const_P_ee(points_array, energy_array, grid_1d_size, A_Th, A_U,
 
     return sum_mid_Th, sum_mid_U, sum_low_Th, sum_low_U, sum_high_Th, sum_high_U
 
+### Adds up volume integrals for sublayers, constant P_ee
+###
+### inputs : same as vol_integral_conts_P_ee, except points_array;
+###          instead, array of sets of points (so
+###          grids_array[i] has the same format as points_array
+###
+### returns : total_mid_Th, total_mid_U, total_low_Th,
+###           total_low_U, total_high_U, total_high_Th :
+###           values of integral for Th, U respectively for
+###           whole layer made up of sublayers
+###
+### NOTE : Layers should be quite easy too add, there shouldn't
+###        be that many of them so not really worth adding a
+###        function to add them up? (perhaps TO DO)
+###
+### TO DO : Test this when you get the final script!! compare
+###         plots with plots made with Optimized_Memory_v4.ipynb
+
+def add_vol_integrals(grids_array, energy_array, grid_1d_size, theta_12, delta_m_21_squared, A_Th, A_U, rho):
+
+    print('adding contributions from sublayers')
+    total_mid_Th = np.zeros(energy_array)
+    total_mid_U = np.zeros(energy_array)
+    total_low_Th = np.zeros(energy_array)
+    total_low_U = np.zeros(energy_array)
+    total_high_Th = np.zeros(energy_array)
+    total_high_U = np.zeros(energy_array)
+
+    for i in range(len(grids_array)):
+        integral_mid_Th, integral_mid_U, integral_low_Th, integral_low_U, integral_high_Th, integral_high_U = vol_integral_const_P_ee(grids_array[i], energy_array, grid_1d_size, theta_12, delta_m_21_squared,A_Th, A_U, rho)
+        total_mid_Th = total_mid_Th + integral_mid_Th
+        total_mid_U = total_mid_U + integral_mid_U
+        total_low_Th = total_low_Th + integral_low_Th
+        total_low_U = total_low_U + integral_low_U
+        total_high_Th = total_high_Th + integral_high_Th
+        total_high_U = total_high_U + integral_high_U
+
+        print(f'added contribution from sublayer {i}')
+
+    print(' ')
+    print('full layer contribution computed')
+
+    return total_mid_Th, total_mid_U, total_low_Th, total_low_U, total_high_Th, total_high_U
 
 ### Rebins counts data.
 ###
@@ -583,8 +663,8 @@ def rebin_counts(initial_bins, counts_in_initial_bins, final_bin_midpoints):
 ###          plot_spectrum : bool; say if you want to plot
 ###          the 'raw' spectrum (not rebinned)
 ###
-### returns : dn_dE_rebinned_U, dn_dE_rebinned_Th - arrays, same
-###           len as energy_array
+### creates globals : dn_dE_rebinned_U, dn_dE_rebinned_Th -
+### arrays, same len as energy_array
 
 ### TO DO : for this and all other plotting bits, figure out a
 ###         nice flexible way to say if you want to save them or not
@@ -594,6 +674,9 @@ def rebin_counts(initial_bins, counts_in_initial_bins, final_bin_midpoints):
 ### as well
 
 def get_emission_fluxes(energy_array, plot_spectrum = False):
+
+    global dn_dE_rebinned_U, dn_dE_rebinned_Th
+
     print("getting emission fluxes")
     energy_array_U = []
     dn_dE_U = []
@@ -650,4 +733,280 @@ def get_emission_fluxes(energy_array, plot_spectrum = False):
     dn_dE_rebinned_U = rebin_counts(energy_array_U, dn_dE_U, energy_array)
     dn_dE_rebinned_Th = rebin_counts(energy_array_Th, dn_dE_Th, energy_array)
 
-    return dn_dE_rebinned_U, dn_dE_rebinned_Th
+### Calculate expected fluxes (arbitrary units)
+### To use this, need lambda values, mu values to be set and
+### sigma, volume integral and rebinned emission spectrum to
+### be computed beforehand
+###
+### NOTE : sigma is a predefined global var, so don't need
+###        to add as input; lambdas, mus and emissons also;
+###        volume ints are assigned to variable names
+###
+### TO DO : (maybe) set energy array as global variable?
+###         OR set the others as not global; I think this
+###         would be better, so should change emission and
+###         sigma
+
+def calc_exp_spec(U_vol_int, Th_vol_int):
+    N_Th = ((lambda_Th)/(mu_Th)) * sigma * dn_dE_rebinned_Th * Th_vol_int
+    N_U = ((lambda_U)/(mu_U)) * sigma * dn_dE_rebinned_U * U_vol_int
+
+    return N_Th, N_U
+
+
+##########################################################
+### PLOTTING FUNCTIONS ###################################
+##########################################################
+
+### NOTE : spec_save can be a bool set with argsparse
+###        if set to True, save all plots + data as csv
+### ADD THIS TO ALL PLOTTING FUNCTIONS
+
+### Plot spectrum
+###
+### inputs : energy_array, N_Th, N_U : arays of same len
+###          spec_save : bool (set true if you want plot saved)
+###          grid_1d_size_crust, grid_1d_size_mantle : floats
+###          abd_set : str 'mid', 'low' or 'high'
+###          title_prefix : str, to identify plot (e.g. std_osc_params
+###          high_theta, const_P_ee, etc)
+###
+###          makes dir to save plot as pdf and data as csv
+###          4 columns for csv : energy_arr, N_U, N_Th, N_U + N_Th
+###
+### NAMING SCHEME : [title_prefix]_spec_mid_100E20C50M
+###                 spec + abundance set name + # E bins + E +
+###                 crust spacing in km + C + mantle spacing
+###                 in km + M
+
+def plot_spec(energy_array, N_Th, N_U, spec_save, grid_1d_size_crust, grid_1d_size_mantle, abd_set, title_prefix=""):
+    # Plotting the data
+    plt.step(energy_array, N_Th, where='mid', label='Th232', color='blue')
+    plt.step(energy_array, N_U, where='mid', label='U238', color='red')
+    plt.step(energy_array, N_U + N_Th, where='mid', label='total', color='blue')
+
+    plt.xlabel('E_nu [MeV]')
+    plt.yscale('log')
+    plt.ylabel('Expected geonu count [AU]')
+    plt.title(f'Expected geonus {title_prefix}')
+
+    plt.ylim(bottom=6e-11)
+    plt.minorticks_on()
+    plt.legend(loc='upper right')
+
+    # Save plot if spec_save is True
+    if spec_save:
+        # Construct the directory path based on the naming scheme
+        dir_name = f"{abd_set}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}"
+        save_dir = os.path.join("..", "plots", dir_name)
+
+        # Check if directory exists, create it if not
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        # Define the full file path with the title prefix
+        file_path = os.path.join(save_dir, f"{title_prefix}_spec_{abd_set}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}.pdf")
+
+        # Print the save location
+        print(f"Saving plot in {file_path}")
+
+        # Save the plot
+        plt.savefig(file_path, format='pdf')
+
+        # Save data to CSV
+        csv_path = os.path.join(save_dir,
+                                f"{title_prefix}_spec_data_{abd_set}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}.csv")
+
+        with open(csv_path, mode='w', newline='') as csv_file:
+            writer = csv.writer(csv_file)
+            # Write header
+            writer.writerow(['Energy [MeV]', 'N_Th', 'N_U', 'Total'])
+            # Write data rows
+            for e, th, u in zip(energy_array, N_Th, N_U):
+                writer.writerow([e, th, u, th + u])
+
+        # Print confirmation of CSV save location
+        print(f"Data saved in {csv_path}")
+
+    plt.show()
+
+### Plot spectrums and ratio
+###
+### inputs : energy_array, N_Th, N_U : arays of same len
+###          two copies of each N
+###          spec_save : bool (set true if you want plot saved)
+###          grid_1d_size_crust, grid_1d_size_mantle : floats
+###          abd_set : str 'mid', 'low' or 'high'
+###          two copies, one for each spectrum
+###          title_prefix : str, to identify plot (e.g. std_osc_params
+###          high_theta, const_P_ee, etc)
+###          two copies, one for each spectrum
+###
+###          makes dir to save ratio plot as pdf and data as csv
+###          2 columns for spectrum csvs: energy_arr, N_U + N_Th
+###          4 columns for ratio csv : energy_arr, N_U_1 + N_Th_1,
+###          N_U_2 + N_Th_2, total_2 / total_2
+###
+###
+### NAMING SCHEME : spectrum plots
+###                 [title_prefix]_spec_mid_100E20C50M
+###                 spec + abundance set name + # E bins + E +
+###                 crust spacing in km + C + mantle spacing
+###                 in km + M
+###
+### TO DO : might need to change to accommodate spectra of
+###         different 1d grid sizes (for mantle mostly)
+
+def plot_rat(energy_array, N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, grid_1d_size_crust, grid_1d_size_mantle, abd_set_1, abd_set_2, title_prefix_1 ="", title_prefix_2 =""):
+    # Plotting the data for spectra
+    plt.step(energy_array, N_U_1 + N_Th_1, where='mid', label='total', color='blue')
+
+    plt.xlabel('E_nu [MeV]')
+    plt.yscale('log')
+    plt.ylabel('Expected geonu count [AU]')
+    plt.title(f'Expected geonus {title_prefix_1}')
+
+    plt.ylim(bottom=6e-11)
+    plt.minorticks_on()
+    plt.legend(loc='upper right')
+
+    # Save plot if spec_save is True
+    if spec_save:
+        # Construct the directory path based on the naming scheme
+        dir_name = 'ratio_plots'
+        save_dir = os.path.join("..", "plots", dir_name)
+
+        # Check if spectrum plot directory exists, create it if not
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        # Define the full file path with the title prefix
+        file_path = os.path.join(save_dir,
+                                 f"{title_prefix_1}_spec_{abd_set_1}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}.pdf")
+
+        # Print the save location
+        print(f"Saving plot in {file_path}")
+
+        # Save the plot
+        plt.savefig(file_path, format='pdf')
+
+        # Save data to CSV
+        csv_path = os.path.join(save_dir,
+                                f"{title_prefix_1}_spec_data_{abd_set_1}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}.csv")
+
+        with open(csv_path, mode='w', newline='') as csv_file:
+            writer = csv.writer(csv_file)
+            # Write header
+            writer.writerow(['Energy [MeV]', 'Total'])
+            # Write data rows
+            for e, th, u in zip(energy_array, N_Th_1, N_U_1):
+                writer.writerow([e, th + u])
+
+        # Print confirmation of CSV save location
+        print(f"Data saved in {csv_path}")
+
+    plt.show()
+
+    # second spectrum
+
+    plt.step(energy_array, N_U_2 + N_Th_2, where='mid', label='total', color='blue')
+
+    plt.xlabel('E_nu [MeV]')
+    plt.yscale('log')
+    plt.ylabel('Expected geonu count [AU]')
+    plt.title(f'Expected geonus {title_prefix_2}')
+
+    plt.ylim(bottom=6e-11)
+    plt.minorticks_on()
+    plt.legend(loc='upper right')
+
+    # Save plot if spec_save is True
+    if spec_save:
+        # Construct the directory path based on the naming scheme
+        dir_name = 'ratio_plots'
+        save_dir = os.path.join("..", "plots", dir_name)
+
+        # Check if spectrum plot directory exists, create it if not
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        # Define the full file path with the title prefix
+        file_path = os.path.join(save_dir,
+                                 f"{title_prefix_2}_spec_{abd_set_2}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}.pdf")
+
+        # Print the save location
+        print(f"Saving plot in {file_path}")
+
+        # Save the plot
+        plt.savefig(file_path, format='pdf')
+
+        # Save data to CSV
+        csv_path = os.path.join(save_dir,
+                                f"{title_prefix_2}_spec_data_{abd_set_2}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}.csv")
+
+        with open(csv_path, mode='w', newline='') as csv_file:
+            writer = csv.writer(csv_file)
+            # Write header
+            writer.writerow(['Energy [MeV]', 'Total'])
+            # Write data rows
+            for e, th, u in zip(energy_array, N_Th_2, N_U_2):
+                writer.writerow([e, th + u])
+
+        # Print confirmation of CSV save location
+        print(f"Data saved in {csv_path}")
+
+    plt.show()
+
+    # Ratio plot
+
+
+    plt.step(energy_array, (N_U_1 + N_Th_1) / (N_U_2 + N_Th_2), where='mid', label='total', color='blue')
+
+    plt.xlabel('E_nu [MeV]')
+    plt.ylabel('Expected geonu count ratio')
+    plt.title(f'Ratio of expected geonus, {title_prefix_1}_{abd_set_1} / {title_prefix_2}_{abd_set_2}')
+
+    plt.ylim(bottom=0.92, top=1.2)
+    plt.minorticks_on()
+    plt.legend(loc='upper right')
+
+    # Save plot if spec_save is True
+    if spec_save:
+        # Construct the directory path based on the naming scheme
+        dir_name = 'ratio_plots'
+        save_dir = os.path.join("..", "plots", dir_name)
+
+        # Check if spectrum plot directory exists, create it if not
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        # Define the full file path with the title prefix
+        file_path = os.path.join(save_dir,
+                                 f"ratio_{title_prefix_1}_{abd_set_1}_{title_prefix_2}_{abd_set_2}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}.pdf")
+
+        # Print the save location
+        print(f"Saving plot in {file_path}")
+
+        # Save the plot
+        plt.savefig(file_path, format='pdf')
+
+        # Save data to CSV
+        csv_path = os.path.join(save_dir,
+                                f"{title_prefix_1}_{abd_set_1}_{title_prefix_2}_{abd_set_2}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}.csv")
+
+        with open(csv_path, mode='w', newline='') as csv_file:
+            writer = csv.writer(csv_file)
+            # Write header
+            writer.writerow(['Energy [MeV]', 'Total'])
+            # Write data rows
+            for e, th1, u1, th2, u2 in zip(energy_array, N_Th_1, N_U_1, N_Th_2, N_U_2):
+                writer.writerow([e, th1 + u1, th2 + u2, (th1 + u1) / (th2 + u2)])
+
+        # Print confirmation of CSV save location
+        print(f"Data saved in {csv_path}")
+
+    plt.show()
+
+
+
+
