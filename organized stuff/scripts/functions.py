@@ -199,10 +199,10 @@ def set_masses():
 def set_lambda_mu():
     global lambda_U, lambda_Th, mu_U, mu_Th
     print('setting lambda and mu values for U and Th')
-    lambda_U = 4.916
-    lambda_Th = 1.563
-    mu_U = 235
-    mu_Th = 232
+    lambda_U = 4.916 #[10^(-18) s^(-1)]
+    lambda_Th = 1.563 #[10^(-18) s^(-1)]
+    mu_U = 235 #[g/mol]
+    mu_Th = 232 #[g/mol]
 
 ### Setting energy array
 ###
@@ -759,6 +759,48 @@ def calc_exp_spec(U_vol_int, Th_vol_int):
 
     return N_Th, N_U
 
+### Calculate expected geonu counts
+### To get the number of geonu per second expected in each
+### energy bin, we have to multiply by 3.268 * 10^(-6) * dE
+### where dE is the width of the energy bin that we are using
+###
+### To get the total number of expected geonu for some
+### total livetime, simply multiply by the livetime in s
+###
+### Further details about how the constant above was obtained
+### will be added to explanation document (if not there already)
+###
+### inputs : N_U, N_Tot - spectra in arbitrary units,
+###          obtained with function above
+###          energy_array : to calc dE
+###          livetime : total observation time [s]
+### returns : N_U_scaled, N_Th_scaled : scaled spectra from
+###           each emitter
+###           geonus_tot : total number of geonus expected
+###           in the given livetime across all energies
+###
+### Note : can use the plotting functions for scaled or
+###        'unscaled' spectra, but they have to be consistent
+###        if we compute flux ratios
+
+def calc_exp_spec_scale(energy_array, N_Th, N_U, livetime):
+    scaling_ct = 3.268 * 10**(-6)
+    dE = energy_array[1] - energy_array[0]
+
+    N_Th_scaled = N_Th * scaling_ct * dE * livetime
+    N_U_scaled = N_U * scaling_ct * dE * livetime
+
+    print(f'Computed scaled spectra for a livetime of {livetime} s = {livetime/86400} days')
+
+    geonus_tot_Th = np.sum(N_Th_scaled)
+    geonus_tot_U = np.sum(N_U_scaled)
+    geonus_tot = geonus_tot_Th + geonus_tot_U
+
+    print(f'Total expected geonus from Th decays : {geonus_tot_Th}')
+    print(f'Total expected geonus from U decays : {geonus_tot_U}')
+    print(f'Total expected geonus from any decays: {geonus_tot}')
+
+    return N_Th_scaled, N_U_scaled, geonus_tot
 
 ##########################################################
 ### PLOTTING FUNCTIONS ###################################
