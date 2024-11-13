@@ -163,6 +163,12 @@ def set_abund (set_name):
 ###        delta_m_21_squared = 7.39 * 10**(-5) #eV^2
 ###        delta_m_32_squared = 2.449 * 10**(-3) #eV^2
 ###        delta_m_31_squared = delta_m_32_squared
+###
+###        params from James' fit (constrained)
+###
+###        theta_12 = 33.7 +- 0.8 [deg]
+###        theta_12 = 0.5882 +- 0.0140 [rad]
+###        delta_m_21_squared = 7.58 (+0.18; -0.17) [10**(-5) eV^2]
 
 def set_fixed_params():
     global theta_23, theta_13, delta_m_32_squared, delta_m_31_squared
@@ -1008,5 +1014,299 @@ def plot_rat(energy_array, N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, grid_1d_size
     plt.show()
 
 
+    ### Plotting comparison with constant P_ee with error
+    ### bands (very hand wavy)
+    ###
+    ### vol_integral_const_P_ee() returns sum_mid_Th,
+    ### sum_mid_U, sum_low_Th, sum_low_U, sum_high_Th,
+    ### sum_high_U; the N_U and N_Th for each are computed
+    ### with calc_exp_spec
+    ###
+    ### TO DO (not super useful and quite complicated)
+
+##########################################################
+### Calculate average P_ee
+###
+### This section includes a bunch of additional functions
+### estimating the average P_ee to be used as a constant
+### for calculating the expected flux
+
+### Set arrays of energy weights for each emitter
+### See explanation doc for details - these are the f(E)'s
+### (Sec. 7.5)
+### Each element of an array corresponds to one energy
+###
+### No inputs, but requires some globally set variables
+
+def set_energy_weights():
+    f_E_Th = ((lambda_Th) / (mu_Th)) * sigma * dn_dE_rebinned_Th
+    f_E_U = ((lambda_U) / (mu_U)) * sigma * dn_dE_rebinned_U
+
+    print("Shape of f(E)_Th:", f_E_Th.shape)
+    print("Shape of f(E)_U:", f_E_U.shape)
+
+    return f_E_Th, f_E_U
 
 
+### Calculate the position weights; these are the w(r)'s
+### from the explanation doc (Sec 7.5)
+
+
+def get_position_weights(points_array, theta_12, delta_m_21_squared, grid_1d_size,  A_Th, A_U, rho):
+    dV = grid_1d_size ** 3
+
+    relative_distance_array = calc_relative_dist(points_array)
+    print("Relative distance array computed successfully")
+
+    w_pos_Th = (A_Th * rho * dV) / (4 * np.pi * relative_distance_array ** 2)
+    w_pos_U = (A_U * rho * dV) / (4 * np.pi * relative_distance_array ** 2)
+
+    return w_pos_U, w_pos_Th
+
+
+### TO DO : go through all functions and delete local vars
+### when testing code, make sure you check with memory print
+### statements if it actually did anything
+
+### To calculate average prob, must calculate terms for
+### numerator and denominator separately for each emitter
+### and for each layer;
+###
+### The dE is always the same so it simplifies, but we must
+### keep volume elements in explicitly because they are not
+### the same in all layers
+
+### One term for the numerator is :
+###   f(E) * w(r) * P(E, r) * dV
+### One term for the denimunator is :
+###   f(E) * w(r) * dV
+
+### Calculate numerator for layer made of sublayers
+### Calculate denominator for layer made of sublayers
+###
+### Keeping both of these in the same function allows us
+### to only calculate the position weights once!
+###
+### inputs : grids (each grids[i] is a 2D array where each elem
+###          is (x, y, z) with the coords of each point
+###          energy_array
+###          grid_1d_size : distance betweem two consecutive
+###          grid points in 1d; used to compute volume element
+###          theta_12, delta_m_21_squared : default values given (best fit
+###          values from PDG (I think 2020)
+###          A_Th, A_U, rho : abundances and density in layer
+
+def calc_avg_P_ee_num_den(energy_array, grids, theta_12, theta_13, delta_m_21_squared, grid_1d_size, A_Th, A_U, rho, f_E_Th, f_E_U):
+
+    print('calculating numerator term for current layer')
+    print(' ')
+    print('calculating survival probabilities for each sublayer')
+
+    P_ee = np.empty(len(grids), dtype = object)
+
+    for i in range(len(grids)):
+        P_ee[i] = calc_P_ee(energy_array, grids[i], theta_13, delta_m_21_squared)
+        print(f'P_ee values computed for layer {i} out of {len(grids)}')
+
+    print('survival probabilities calculated')
+    print('computing position weights')
+
+    w_pos_Th = np.empty(len(grids), dtype = object)
+    w_pos_U = np.empty(len(grids), dtype = object)
+
+    for i in range(len(grids)):
+        w_pos_Th[i], w_pos_U[i] = get_position_weights(grids[i], theta_12, delta_m_21_squared, grid_1d_size, A_Th, A_U, rho)
+        w_pos_Th[i] = np.nan_to_num(w_pos_Th[i], nan=0)
+        w_pos_U[i] = np.nan_to_num(w_pos_U[i], nan=0)
+        print(f'position weights computed for layer {i} out of {len(grids)}')
+        print("Shape of w_pos_Th_c : ", w_pos_Th[i].shape)
+        print("Shape of w_pos_U_c : ", w_pos_U[i].shape)
+
+    print(' ')
+    print('computing numerators')
+
+    numerator_Th = np.empty(len(grids), dtype = object)
+    numerator_U = np.empty(len(grids), dtype = object)
+
+    for i in range(len(grids)):
+        numerator_Th[i] = np.nansum(w_pos_Th[i][:, np.newaxis] * f_E_Th * P_ee[i].T)
+        numerator_U[i] = np.nansum(w_pos_U[i][:, np.newaxis] * f_E_U * P_ee[i].T)
+        print(f'numerator values computed for layer {i} out of {len(grids)}')
+        print("Shape of numerator_Th_c : ", numerator_Th[i].shape)
+        print("Shape of numerator_U_c : ", numerator_U[i].shape)
+
+    # Each numerator[i] should be a number, so we add them up
+    print('computing numerator values for entire layer')
+
+    # Compute the total numerators
+    numerator_Th_total = np.nansum(numerator_Th)
+    numerator_U_total = np.nansum(numerator_U)
+
+    print('numerator values for the entire layer computed')
+    print('computing denominator values for each sublayer')
+
+    denominator_Th = np.empty(len(grids), dtype = object)
+    denominator_U = np.empty(len(grids), dtype = object)
+
+    for i in range(len(grids)):
+        denominator_Th[i] = np.nansum(w_pos_Th[i][:, np.newaxis] * f_E_Th)
+        denominator_U[i] = np.nansum(w_pos_U[i][:, np.newaxis] * f_E_U)
+        print(f'denominator values computed for layer {i} out of {len(grids)}')
+        print('Shape of denominator_Th_c : ', denominator_Th[i].shape)
+        print('Shape of denominator_U_c : ', denominator_U[i].shape)
+        print(' ')
+
+    print('computing denominator values for entire layer')
+    denominator_Th_total = np.nansum(denominator_Th)
+    denominator_U_total = np.nansum(denominator_U)
+    print('denominator values for the entire layer computed')
+
+
+    return numerator_Th_total, numerator_U_total, denominator_Th_total, denominator_U_total
+
+### Calculate numerator and denominator terms for simple layer
+
+def calc_avg_P_ee_num_den_simple(energy_array, points_array, theta_12, theta_13, delta_m_21_squared, grid_1d_size, A_Th, A_U, rho, f_E_Th, f_E_U):
+    print('calculating survival probabilities for layer')
+
+    P_ee = calc_P_ee(energy_array, points_array, theta_12, theta_13, delta_m_21_squared)
+    print('survival probability computed')
+    print('calculating position weights')
+
+    w_pos_Th, w_pos_U = get_position_weights(points_array, theta_12, delta_m_21_squared, grid_1d_size, A_Th, A_U, rho)
+
+    print('position weights computed')
+    print(' ')
+    print('computing numerators')
+
+    numerator_Th = np.nansum(w_pos_Th[:, np.newaxis] * f_E_Th * P_ee.T)
+    numerator_U = np.nansum(w_pos_U[:, np.newaxis] * f_E_U * P_ee.T)
+    print(f'numerator values computed for layer')
+    print(f'Shape of numerator_Th_c : ', numerator_Th.shape)
+    print(f'Shape of numerator_U_c : ', numerator_U.shape)
+    print()
+
+    print('computing denominator values')
+    denominator_Th = np.nansum(w_pos_Th[:, np.newaxis] * f_E_Th)
+    denominator_U = np.nansum(w_pos_U[:, np.newaxis] * f_E_U)
+    print(f'denominator values computed for layer')
+    print(f'Shape of denominator_Th_c : ', denominator_Th.shape)
+    print(f'Shape of denominator_U_c : ', denominator_U.shape)
+
+    return numerator_Th, numerator_U, denominator_Th, denominator_U
+
+### TO DO : keeping layers with sublayers in an array of arrays
+###         is not great, should use list instead given that
+###         we just iterate over each sublayer and don't use
+###         vectorized operations
+### TO DO : after fixing that, should merge the two functions
+###         above into one - check if it's a list, then if it
+###         is do the loop, otherwise idk wrap array into a list
+###         with one elem and keep the loop anyway
+
+
+### Calculate average P_ee with stdev for Layered Earth Model
+### Important : this function assumes that we are working with
+### an Earth model with 4 layers : C (crust), CLM, DM, EM
+### and that the numerator and denominator terms associated
+### with each of these and each emitter has been computed
+
+def calc_P_ee_avg(numerator_Th_c, numerator_U_c, numerator_Th_CLM, numerator_U_CLM, numerator_Th_DM, numerator_U_DM, numerator_Th_EM, numerator_U_EM, denominator_Th_c, denominator_U_c, denominator_Th_CLM, denominator_U_CLM, denominator_Th_DM, denominator_U_DM, denominator_Th_EM, denominator_U_EM):
+    print('calculating average P_ee for given Earth model')
+    P_ee_average = (numerator_Th_c + numerator_U_c + numerator_Th_CLM + numerator_U_CLM + numerator_Th_DM + numerator_U_DM + numerator_Th_EM + numerator_U_EM) / (denominator_Th_c + denominator_U_c + denominator_Th_CLM + denominator_U_CLM + denominator_Th_DM + denominator_U_DM + denominator_Th_EM + denominator_U_EM)
+
+    print(f'Average P_ee computed: P_ee = {P_ee_average}')
+    return P_ee_average
+
+### To calculate the variance, the numerators are different
+### and need the computed average value
+
+def calc_var_P_ee_num(energy_array, grids, theta_12, theta_13, delta_m_21_squared, grid_1d_size, A_Th, A_U, rho, f_E_Th, f_E_U, P_ee_average):
+
+    print('calculating numerator term for current layer')
+    print(' ')
+    print('calculating survival probabilities for each sublayer')
+
+    P_ee = np.empty(len(grids), dtype = object)
+
+    for i in range(len(grids)):
+        P_ee[i] = calc_P_ee(energy_array, grids[i], theta_13, delta_m_21_squared)
+        print(f'P_ee values computed for layer {i} out of {len(grids)}')
+
+    print('survival probabilities calculated')
+    print('computing position weights')
+
+    w_pos_Th = np.empty(len(grids), dtype = object)
+    w_pos_U = np.empty(len(grids), dtype = object)
+
+    for i in range(len(grids)):
+        w_pos_Th[i], w_pos_U[i] = get_position_weights(grids[i], theta_12, delta_m_21_squared, grid_1d_size, A_Th, A_U, rho)
+        w_pos_Th[i] = np.nan_to_num(w_pos_Th[i], nan=0)
+        w_pos_U[i] = np.nan_to_num(w_pos_U[i], nan=0)
+        print(f'position weights computed for layer {i} out of {len(grids)}')
+        print("Shape of w_pos_Th_c : ", w_pos_Th[i].shape)
+        print("Shape of w_pos_U_c : ", w_pos_U[i].shape)
+
+    print(' ')
+    print('computing numerators')
+
+    numerator_var_Th = np.empty(len(grids), dtype = object)
+    numerator_var_U = np.empty(len(grids), dtype = object)
+
+    for i in range(len(grids)):
+        numerator_var_Th[i] = np.nansum(w_pos_Th[i][:, np.newaxis] * f_E_Th * (P_ee[i].T - P_ee_average))
+        numerator_var_U[i] = np.nansum(w_pos_U[i][:, np.newaxis] * f_E_U * (P_ee[i].T - P_ee_average))
+
+        print(f'numerator values computed for layer {i} out of {len(grids)}')
+        print("Shape of numerator_var_Th_c : ", numerator_var_Th[i].shape)
+        print("Shape of numerator_var_U_c : ", numerator_var_U[i].shape)
+
+    # Each numerator[i] should be a number, so we add them up
+    print('computing numerator values for entire layer')
+
+    # Compute the total numerators
+    numerator_Th_total = np.nansum(numerator_var_Th)
+    numerator_U_total = np.nansum(numerator_var_U)
+
+    print('numerator values for the entire layer computed')
+
+    return numerator_Th_total, numerator_U_total
+
+### Calc numerators for var for single layer
+
+def calc_avg_P_ee_num_den_simple(energy_array, points_array, theta_12, theta_13, delta_m_21_squared, grid_1d_size, A_Th, A_U, rho, f_E_Th, f_E_U, P_ee_average):
+    print('calculating survival probabilities for layer')
+
+    P_ee = calc_P_ee(energy_array, points_array, theta_12, theta_13, delta_m_21_squared)
+    print('survival probability computed')
+    print('calculating position weights')
+
+    w_pos_Th, w_pos_U = get_position_weights(points_array, theta_12, delta_m_21_squared, grid_1d_size, A_Th, A_U, rho)
+
+    print('position weights computed')
+    print(' ')
+    print('computing numerators')
+
+    numerator_var_Th = np.nansum(w_pos_Th[:, np.newaxis] * f_E_Th * (P_ee.T - P_ee_average))
+    numerator_var_U = np.nansum(w_pos_U[:, np.newaxis] * f_E_U * (P_ee.T - P_ee_average))
+
+    print(f'numerator values computed for layer')
+    print(f'Shape of numerator_var_Th_c : ', numerator_var_Th.shape)
+    print(f'Shape of numerator_var_U_c : ', numerator_var_U.shape)
+
+    return numerator_var_Th, numerator_var_U
+
+### Calculate stdev for aerage P_ee given Earth model
+
+def calc_P_ee_stdev(numerator_var_Th_c, numerator_var_U_c, numerator_var_Th_CLM, numerator_var_U_CLM, numerator_var_Th_DM, numerator_var_U_DM,
+                  numerator_var_Th_EM, numerator_var_U_EM, denominator_Th_c, denominator_U_c, denominator_Th_CLM,
+                  denominator_U_CLM, denominator_Th_DM, denominator_U_DM, denominator_Th_EM, denominator_U_EM):
+    print('calculating stdev P_ee for given Earth model')
+    P_ee_var = (numerator_var_Th_c + numerator_var_U_c + numerator_var_Th_CLM + numerator_var_U_CLM + numerator_var_Th_DM + numerator_var_U_DM + numerator_var_Th_EM + numerator_var_U_EM) / (
+                               denominator_Th_c + denominator_U_c + denominator_Th_CLM + denominator_U_CLM + denominator_Th_DM + denominator_U_DM + denominator_Th_EM + denominator_U_EM)
+
+    print(f'P_ee variance computed = {P_ee_var}')
+    P_ee_stdev = np.sqrt(P_ee_var)
+    print(f'P_ee_stdev computed = {P_ee_stdev}')
+
+    return P_ee_stdev
