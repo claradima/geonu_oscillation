@@ -8,6 +8,9 @@ import argparse
 
 from functions import *
 
+### NOTES
+###
+### You can also plot the unscaled spectra by uncommenting some lines
 
 def main():
     # Create the argument parser
@@ -23,11 +26,11 @@ def main():
     parser.add_argument('-Ebins', type = int, nargs = 1,
                         default = 100, help = 'Specify number of energy bins')
     parser.add_argument('-cgridcount', type = int, nargs = 1,
-                        default = 700,
+                        default = 820,
                         help = 'Specify crust grid count (1d)') #690 for 18km
                                                                 #820 for 15.5 km
     parser.add_argument('-mgridcount', type = int, nargs = 1,
-                        default = 160, # 30 km for 420
+                        default = 420, # 30 km for 420
                                        # 28 km for 450
                         help = 'Specify crust grid count (1d)')
     parser.add_argument('-Cshells', type = int, nargs = 1,
@@ -53,6 +56,9 @@ def main():
     parser.add_argument('-specsave', type = bool, nargs = 1,
                         default = True,
                         help = 'Specify whether to save the spectra (data in csv files and plots')
+    parser.add_argument('-livetime', type = float, nargs = 1,
+                        default = 100,
+                        help = 'Specify detector livetime in days; default 100')
     # Parse the arguments
     args = parser.parse_args()
 
@@ -208,22 +214,22 @@ def main():
     print('computing total flux')
 
     N_Th_unsc, N_U_unsc = calc_exp_spec(U_vol_int=int_U, Th_vol_int=int_Th)
-    print('computed unscaled spectrum. now plotting ...')
-    plot_spec(N_Th = N_Th_unsc, N_U = N_U_unsc, spec_save = args.specsave,
-              grid_1d_size_crust=crust_grid_1d_size,
-              grid_1d_size_mantle=mantle_grid_1d_size,
-              abd_set=args.abd,
-              title_prefix = 'Unscaled_standard_osc_params' )
+    print('computed unscaled spectrum')
+    #plot_spec(N_Th = N_Th_unsc, N_U = N_U_unsc, spec_save = args.specsave,
+    #          grid_1d_size_crust=crust_grid_1d_size,
+    #          grid_1d_size_mantle=mantle_grid_1d_size,
+    #          abd_set=args.abd,
+    #          title_prefix = 'spec_unscaled_standard_osc_params' )
 
     print(' ')
     print('computing scaled spectrum')
-    N_Th_scaled, N_U_scaled, geonus_tot = calc_exp_spec_scale(N_Th = N_Th_unsc, N_U = N_U_unsc, livetime = days_to_seconds(134) )
+    N_Th_scaled, N_U_scaled, geonus_tot = calc_exp_spec_scale(N_Th = N_Th_unsc, N_U = N_U_unsc, livetime = days_to_seconds(args.livetime) )
     print('computed scaled spectrum. now plotting ...')
     plot_spec(N_Th=N_Th_scaled, N_U=N_U_scaled, spec_save=args.specsave,
               grid_1d_size_crust=crust_grid_1d_size,
               grid_1d_size_mantle=mantle_grid_1d_size,
               abd_set=args.abd,
-              title_prefix='Scaled_standard_osc_params')
+              title_prefix='spec_scaled_standard_osc_params')
     print('NICE!! We computed spectrum for standard osc params')
     print(' ')
     print(' ')
@@ -289,21 +295,377 @@ def main():
     N_Th_ctP_mid_unsc, N_U_ctP_mid_unsc = calc_exp_spec(U_vol_int=int_ctP_mid_U, Th_vol_int=int_ctP_mid_Th)
     print('computing scaled fluxes, for midpoint values only')
     N_Th_ctP_mid_scaled, N_U_ctP_mid_scaled, geonus_ctP_mid_tot = calc_exp_spec_scale(N_Th=N_Th_ctP_mid_unsc, N_U=N_U_ctP_mid_unsc,
-                                                              livetime=days_to_seconds(134))
+                                                              livetime=days_to_seconds(args.livetime))
     print('computed scaled spectrum. now plotting ...')
 
     print('all done! now plotting comparison between spectrum with constant P_ee and full oscillation formula')
     print('used standard osc params')
 
-    plot_rat( N_Th_1 = N_Th_scaled, N_U_1 = N_U_scaled,
-              N_Th_2 = N_Th_ctP_mid_scaled , N_U_2 = N_U_ctP_mid_scaled,
+    plot_rat( N_Th_2 = N_Th_scaled, N_U_2 = N_U_scaled,
+              N_Th_1 = N_Th_ctP_mid_scaled , N_U_1 = N_U_ctP_mid_scaled,
               spec_save = args.specsave,
               grid_1d_size_crust = crust_grid_1d_size,
               grid_1d_size_mantle = mantle_grid_1d_size,
               abd_set_1 = args.abd,
               abd_set_2 = args.abd,
-              title_prefix_1="Scaled_standard_osc_params",
-              title_prefix_2="Scaled_const_Pee")
+              title_prefix_2="Scaled_standard_osc_params",
+              title_prefix_1="Scaled_const_Pee")
+
+    ##################################################################################################
+
+    # Computing spectra for alternate oscillation parameters
+    # Alternate parameters already calculated
+
+    # Low theta_12
+
+    print('low theta_12 : computing volume integrals for each layer, low theta_12')
+    int_Th_low_theta_c, int_U_low_theta_c = add_vol_integrals(grids_array=crust_points,
+                                          grid_1d_size=crust_grid_1d_size,
+                                          theta_12=theta_12_low,
+                                          delta_m_21_squared=dm_21_sq_mid,
+                                          A_Th=A_Th_c, A_U=A_U_c, rho=rho_c)
+    print(' ')
+    print(' ')
+    print('low theta_12 : CRUST DONE')
+    print(' ')
+    print(' ')
+    int_Th_low_theta_CLM, int_U_low_theta_CLM = add_vol_integrals(grids_array=CLM_points,
+                                              grid_1d_size=mantle_grid_1d_size,
+                                              theta_12=theta_12_low,
+                                              delta_m_21_squared=dm_21_sq_mid,
+                                              A_Th=A_Th_CLM, A_U=A_U_CLM, rho=rho_CLM)
+    print(' ')
+    print(' ')
+    print('low theta_12 : CLM DONE')
+    print(' ')
+    print(' ')
+    int_Th_low_theta_DM, int_U_low_theta_DM = add_vol_integrals(grids_array=DM_points,
+                                            grid_1d_size=mantle_grid_1d_size,
+                                            theta_12=theta_12_low,
+                                            delta_m_21_squared=dm_21_sq_mid,
+                                            A_Th=A_Th_DM, A_U=A_U_DM, rho=rho_DM)
+    print(' ')
+    print(' ')
+    print('low theta_12 : DM DONE')
+    print(' ')
+    print(' ')
+    int_Th_low_theta_EM, int_U_low_theta_EM = add_vol_integrals(grids_array=EM_points,
+                                            grid_1d_size=mantle_grid_1d_size,
+                                            theta_12=theta_12_low,
+                                            delta_m_21_squared=dm_21_sq_mid,
+                                            A_Th=A_Th_EM, A_U=A_U_EM, rho=rho_EM)
+    print(' ')
+    print(' ')
+    print('low theta_12 : EM DONE')
+    print(' ')
+    print(' ')
+    print('low theta_12 : ALL DONE')
+    print('low theta_12 : computing total volume integrals')
+    # Computed all volume integrals with standard osc params
+    # Now compute total volume integral over all layers
+    int_Th_low_theta = int_Th_low_theta_c + int_Th_low_theta_CLM + int_Th_low_theta_DM + int_Th_low_theta_EM
+    int_U_low_theta = int_U_low_theta_c + int_U_low_theta_CLM + int_U_low_theta_DM + int_U_low_theta_EM
+    print(' ')
+    print('low theta_12 : computing total flux')
+
+    N_Th_low_theta_unsc, N_U_low_theta_unsc = calc_exp_spec(U_vol_int=int_U_low_theta, Th_vol_int=int_Th_low_theta)
+    print('low theta_12 : computed unscaled spectrum.')
+    #plot_spec(N_Th=N_Th_low_theta_unsc, N_U=N_U_low_theta_unsc, spec_save=args.specsave,
+    #         grid_1d_size_crust=crust_grid_1d_size,
+    #          grid_1d_size_mantle=mantle_grid_1d_size,
+    #          abd_set=args.abd,
+    #          title_prefix='spec_unscaled_low_theta_12')
+
+    print(' ')
+    print('low theta_12 : computing scaled spectrum')
+    N_Th_low_theta_scaled, N_U_low_theta_scaled, geonus_low_theta_tot = calc_exp_spec_scale(N_Th=N_Th_low_theta_unsc,
+                                                                                            N_U=N_U_low_theta_unsc,
+                                                                                            livetime=days_to_seconds(args.livetime))
+    print('low theta_12 : computed scaled spectrum. now plotting ...')
+    plot_spec(N_Th=N_Th_low_theta_scaled, N_U=N_U_low_theta_scaled, spec_save=args.specsave,
+              grid_1d_size_crust=crust_grid_1d_size,
+              grid_1d_size_mantle=mantle_grid_1d_size,
+              abd_set=args.abd,
+              title_prefix='spec_scaled_low_theta_12')
+    print('low theta_12 : NICE!! We computed spectrum for low theta')
+    print(' ')
+    print(' ')
+
+    print('low theta_12 : now plotting comparison between spectrum with constant low and standard theta_12')
+
+    plot_rat(N_Th_2=N_Th_scaled, N_U_2=N_U_scaled,
+             N_Th_1=N_Th_low_theta_scaled, N_U_1=N_U_low_theta_scaled,
+             spec_save=args.specsave,
+             grid_1d_size_crust=crust_grid_1d_size,
+             grid_1d_size_mantle=mantle_grid_1d_size,
+             abd_set_1=args.abd,
+             abd_set_2=args.abd,
+             title_prefix_1="Scaled_low_theta_12",
+             title_prefix_2="Scaled_standard_osc_params")
+
+    # High theta_12
+
+    print('high theta_12 : computing volume integrals for each layer, high theta_12')
+    int_Th_high_theta_c, int_U_high_theta_c = add_vol_integrals(grids_array=crust_points,
+                                          grid_1d_size=crust_grid_1d_size,
+                                          theta_12=theta_12_high,
+                                          delta_m_21_squared=dm_21_sq_mid,
+                                          A_Th=A_Th_c, A_U=A_U_c, rho=rho_c)
+    print(' ')
+    print(' ')
+    print('high theta_12 : CRUST DONE')
+    print(' ')
+    print(' ')
+    int_Th_high_theta_CLM, int_U_high_theta_CLM = add_vol_integrals(grids_array=CLM_points,
+                                              grid_1d_size=mantle_grid_1d_size,
+                                              theta_12=theta_12_high,
+                                              delta_m_21_squared=dm_21_sq_mid,
+                                              A_Th=A_Th_CLM, A_U=A_U_CLM, rho=rho_CLM)
+    print(' ')
+    print(' ')
+    print('high theta_12 : CLM DONE')
+    print(' ')
+    print(' ')
+    int_Th_high_theta_DM, int_U_high_theta_DM = add_vol_integrals(grids_array=DM_points,
+                                            grid_1d_size=mantle_grid_1d_size,
+                                            theta_12=theta_12_high,
+                                            delta_m_21_squared=dm_21_sq_mid,
+                                            A_Th=A_Th_DM, A_U=A_U_DM, rho=rho_DM)
+    print(' ')
+    print(' ')
+    print('high theta_12 : DM DONE')
+    print(' ')
+    print(' ')
+    int_Th_high_theta_EM, int_U_high_theta_EM = add_vol_integrals(grids_array=EM_points,
+                                            grid_1d_size=mantle_grid_1d_size,
+                                            theta_12=theta_12_high,
+                                            delta_m_21_squared=dm_21_sq_mid,
+                                            A_Th=A_Th_EM, A_U=A_U_EM, rho=rho_EM)
+    print(' ')
+    print(' ')
+    print('high theta_12 : EM DONE')
+    print(' ')
+    print(' ')
+    print('high theta_12 : ALL DONE')
+    print('high theta_12 : computing total volume integrals')
+    # Computed all volume integrals with standard osc params
+    # Now compute total volume integral over all layers
+    int_Th_high_theta = int_Th_high_theta_c + int_Th_high_theta_CLM + int_Th_high_theta_DM + int_Th_high_theta_EM
+    int_U_high_theta = int_U_high_theta_c + int_U_high_theta_CLM + int_U_high_theta_DM + int_U_high_theta_EM
+    print(' ')
+    print('high theta_12 : computing total flux')
+
+    N_Th_high_theta_unsc, N_U_high_theta_unsc = calc_exp_spec(U_vol_int=int_U_high_theta, Th_vol_int=int_Th_high_theta)
+    print('high theta_12 : computed unscaled spectrum')
+    #plot_spec(N_Th=N_Th_high_theta_unsc, N_U=N_U_high_theta_unsc, spec_save=args.specsave,
+    #          grid_1d_size_crust=crust_grid_1d_size,
+    #          grid_1d_size_mantle=mantle_grid_1d_size,
+    #          abd_set=args.abd,
+    #          title_prefix='spec_unscaled_high_theta_12')
+
+    print(' ')
+    print('high theta_12 : computing scaled spectrum')
+    N_Th_high_theta_scaled, N_U_high_theta_scaled, geonus_high_theta_tot = calc_exp_spec_scale(N_Th=N_Th_high_theta_unsc,
+                                                                                            N_U=N_U_high_theta_unsc,
+                                                                                            livetime=days_to_seconds(args.livetime))
+    print('high theta_12 : computed scaled spectrum. now plotting ...')
+    plot_spec(N_Th=N_Th_high_theta_scaled, N_U=N_U_high_theta_scaled, spec_save=args.specsave,
+              grid_1d_size_crust=crust_grid_1d_size,
+              grid_1d_size_mantle=mantle_grid_1d_size,
+              abd_set=args.abd,
+              title_prefix='spec_scaled_high_theta_12')
+    print('high theta_12 : NICE!! We computed spectrum for high theta')
+    print(' ')
+    print(' ')
+
+    print('high theta_12 : now plotting comparison between spectrum with constant high and standard theta_12')
+
+    plot_rat(N_Th_2=N_Th_scaled, N_U_2=N_U_scaled,
+             N_Th_1=N_Th_high_theta_scaled, N_U_1=N_U_high_theta_scaled,
+             spec_save=args.specsave,
+             grid_1d_size_crust=crust_grid_1d_size,
+             grid_1d_size_mantle=mantle_grid_1d_size,
+             abd_set_1=args.abd,
+             abd_set_2=args.abd,
+             title_prefix_1="Scaled_high_theta_12",
+             title_prefix_2="Scaled_standard_osc_params")
+
+    # Low delta_m_21^2
+
+    print('low delta_m_21^2 : computing volume integrals for each layer, low delta_m_21^2')
+    int_Th_low_dm_c, int_U_low_dm_c = add_vol_integrals(grids_array=crust_points,
+                                                              grid_1d_size=crust_grid_1d_size,
+                                                              theta_12=theta_12_mid,
+                                                              delta_m_21_squared=dm_21_sq_low,
+                                                              A_Th=A_Th_c, A_U=A_U_c, rho=rho_c)
+    print(' ')
+    print(' ')
+    print('low delta_m_21^2 : CRUST DONE')
+    print(' ')
+    print(' ')
+    int_Th_low_dm_CLM, int_U_low_dm_CLM = add_vol_integrals(grids_array=CLM_points,
+                                                                  grid_1d_size=mantle_grid_1d_size,
+                                                                  theta_12=theta_12_mid,
+                                                                  delta_m_21_squared=dm_21_sq_low,
+                                                                  A_Th=A_Th_CLM, A_U=A_U_CLM, rho=rho_CLM)
+    print(' ')
+    print(' ')
+    print('low delta_m_21^2 : CLM DONE')
+    print(' ')
+    print(' ')
+    int_Th_low_dm_DM, int_U_low_dm_DM = add_vol_integrals(grids_array=DM_points,
+                                                                grid_1d_size=mantle_grid_1d_size,
+                                                                theta_12=theta_12_mid,
+                                                                delta_m_21_squared=dm_21_sq_low,
+                                                                A_Th=A_Th_DM, A_U=A_U_DM, rho=rho_DM)
+    print(' ')
+    print(' ')
+    print('low delta_m_21^2 : DM DONE')
+    print(' ')
+    print(' ')
+    int_Th_low_dm_EM, int_U_low_dm_EM = add_vol_integrals(grids_array=EM_points,
+                                                                grid_1d_size=mantle_grid_1d_size,
+                                                                theta_12=theta_12_mid,
+                                                                delta_m_21_squared=dm_21_sq_low,
+                                                                A_Th=A_Th_EM, A_U=A_U_EM, rho=rho_EM)
+    print(' ')
+    print(' ')
+    print('low delta_m_21^2 : EM DONE')
+    print(' ')
+    print(' ')
+    print('low delta_m_21^2 : ALL DONE')
+    print('low delta_m_21^2: computing total volume integrals')
+    # Computed all volume integrals with standard osc params
+    # Now compute total volume integral over all layers
+    int_Th_low_dm = int_Th_low_dm_c + int_Th_low_dm_CLM + int_Th_low_dm_DM + int_Th_low_dm_EM
+    int_U_low_dm = int_U_low_dm_c + int_U_low_dm_CLM + int_U_low_dm_DM + int_U_low_dm_EM
+    print(' ')
+    print('low delta_m_21^2 : computing total flux')
+
+    N_Th_low_dm_unsc, N_U_low_dm_unsc = calc_exp_spec(U_vol_int=int_U_low_dm, Th_vol_int=int_Th_low_dm)
+    print('low delta_m_21^2 : computed unscaled spectrum')
+    #plot_spec(N_Th=N_Th_low_dm_unsc, N_U=N_U_low_dm_unsc, spec_save=args.specsave,
+    #          grid_1d_size_crust=crust_grid_1d_size,
+    #          grid_1d_size_mantle=mantle_grid_1d_size,
+    #          abd_set=args.abd,
+    #          title_prefix='spec_unscaled_low_dm_12')
+
+    print(' ')
+    print('low delta_m_21^2 : computing scaled spectrum')
+    N_Th_low_dm_scaled, N_U_low_dm_scaled, geonus_low_dm_tot = calc_exp_spec_scale(N_Th=N_Th_low_dm_unsc,
+                                                                                            N_U=N_U_low_dm_unsc,
+                                                                                            livetime=days_to_seconds(
+                                                                                                args.livetime))
+    print('low delta_m_21^2 : computed scaled spectrum. now plotting ...')
+    plot_spec(N_Th=N_Th_low_dm_scaled, N_U=N_U_low_dm_scaled, spec_save=args.specsave,
+              grid_1d_size_crust=crust_grid_1d_size,
+              grid_1d_size_mantle=mantle_grid_1d_size,
+              abd_set=args.abd,
+              title_prefix='spec_scaled_low_dm_12')
+    print('low delta_m_21^2 : NICE!! We computed spectrum for low delta_m_21^2')
+    print(' ')
+    print(' ')
+
+    print('low delta_m_21^2 : now plotting comparison between spectrum with constant low and standard delta_m_21^2')
+
+    plot_rat(N_Th_2=N_Th_scaled, N_U_2=N_U_scaled,
+             N_Th_1=N_Th_low_dm_scaled, N_U_1=N_U_low_dm_scaled,
+             spec_save=args.specsave,
+             grid_1d_size_crust=crust_grid_1d_size,
+             grid_1d_size_mantle=mantle_grid_1d_size,
+             abd_set_1=args.abd,
+             abd_set_2=args.abd,
+             title_prefix_1="Scaled_low_dm",
+             title_prefix_2="Scaled_standard_osc_params")
+
+    # High delta_m_21^2
+
+    print('high delta_m_21^2 : computing volume integrals for each layer, high delta_m_21^2')
+    int_Th_high_dm_c, int_U_high_dm_c = add_vol_integrals(grids_array=crust_points,
+                                                          grid_1d_size=crust_grid_1d_size,
+                                                          theta_12=theta_12_mid,
+                                                          delta_m_21_squared=dm_21_sq_high,
+                                                          A_Th=A_Th_c, A_U=A_U_c, rho=rho_c)
+    print(' ')
+    print(' ')
+    print('high delta_m_21^2 : CRUST DONE')
+    print(' ')
+    print(' ')
+    int_Th_high_dm_CLM, int_U_high_dm_CLM = add_vol_integrals(grids_array=CLM_points,
+                                                              grid_1d_size=mantle_grid_1d_size,
+                                                              theta_12=theta_12_mid,
+                                                              delta_m_21_squared=dm_21_sq_high,
+                                                              A_Th=A_Th_CLM, A_U=A_U_CLM, rho=rho_CLM)
+    print(' ')
+    print(' ')
+    print('high delta_m_21^2 : CLM DONE')
+    print(' ')
+    print(' ')
+    int_Th_high_dm_DM, int_U_high_dm_DM = add_vol_integrals(grids_array=DM_points,
+                                                            grid_1d_size=mantle_grid_1d_size,
+                                                            theta_12=theta_12_mid,
+                                                            delta_m_21_squared=dm_21_sq_high,
+                                                            A_Th=A_Th_DM, A_U=A_U_DM, rho=rho_DM)
+    print(' ')
+    print(' ')
+    print('high delta_m_21^2 : DM DONE')
+    print(' ')
+    print(' ')
+    int_Th_high_dm_EM, int_U_high_dm_EM = add_vol_integrals(grids_array=EM_points,
+                                                            grid_1d_size=mantle_grid_1d_size,
+                                                            theta_12=theta_12_mid,
+                                                            delta_m_21_squared=dm_21_sq_high,
+                                                            A_Th=A_Th_EM, A_U=A_U_EM, rho=rho_EM)
+    print(' ')
+    print(' ')
+    print('high delta_m_21^2 : EM DONE')
+    print(' ')
+    print(' ')
+    print('high delta_m_21^2 : ALL DONE')
+    print('high delta_m_21^2: computing total volume integrals')
+    # Computed all volume integrals with standard osc params
+    # Now compute total volume integral over all layers
+    int_Th_high_dm = int_Th_high_dm_c + int_Th_high_dm_CLM + int_Th_high_dm_DM + int_Th_high_dm_EM
+    int_U_high_dm = int_U_high_dm_c + int_U_high_dm_CLM + int_U_high_dm_DM + int_U_high_dm_EM
+    print(' ')
+    print('high delta_m_21^2 : computing total flux')
+
+    N_Th_high_dm_unsc, N_U_high_dm_unsc = calc_exp_spec(U_vol_int=int_U_high_dm, Th_vol_int=int_Th_high_dm)
+    print('high delta_m_21^2 : computed unscaled spectrum')
+    #plot_spec(N_Th=N_Th_high_dm_unsc, N_U=N_U_high_dm_unsc, spec_save=args.specsave,
+    #          grid_1d_size_crust=crust_grid_1d_size,
+    #          grid_1d_size_mantle=mantle_grid_1d_size,
+    #          abd_set=args.abd,
+    #          title_prefix='spec_unscaled_high_dm_12')
+
+    print(' ')
+    print('high delta_m_21^2 : computing scaled spectrum')
+    N_Th_high_dm_scaled, N_U_high_dm_scaled, geonus_high_dm_tot = calc_exp_spec_scale(N_Th=N_Th_high_dm_unsc,
+                                                                                      N_U=N_U_high_dm_unsc,
+                                                                                      livetime=days_to_seconds(
+                                                                                          args.livetime))
+    print('high delta_m_21^2 : computed scaled spectrum. now plotting ...')
+    plot_spec(N_Th=N_Th_high_dm_scaled, N_U=N_U_high_dm_scaled, spec_save=args.specsave,
+              grid_1d_size_crust=crust_grid_1d_size,
+              grid_1d_size_mantle=mantle_grid_1d_size,
+              abd_set=args.abd,
+              title_prefix='spec_scaled_high_dm_12')
+    print('high delta_m_21^2 : NICE!! We computed spectrum for high delta_m_21^2')
+    print(' ')
+    print(' ')
+
+    print('high delta_m_21^2 : now plotting comparison between spectrum with constant high and standard delta_m_21^2')
+
+    plot_rat(N_Th_2=N_Th_scaled, N_U_2=N_U_scaled,
+             N_Th_1=N_Th_high_dm_scaled, N_U_1=N_U_high_dm_scaled,
+             spec_save=args.specsave,
+             grid_1d_size_crust=crust_grid_1d_size,
+             grid_1d_size_mantle=mantle_grid_1d_size,
+             abd_set_1=args.abd,
+             abd_set_2=args.abd,
+             title_prefix_1="Scaled_high_dm",
+             title_prefix_2="Scaled_standard_osc_params")
+
 
 if __name__ == "__main__":
     main()

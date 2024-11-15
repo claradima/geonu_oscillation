@@ -882,19 +882,35 @@ def calc_exp_spec_scale(N_Th, N_U, livetime):
 ###                 in km + M
 
 def plot_spec(N_Th, N_U, spec_save, grid_1d_size_crust, grid_1d_size_mantle, abd_set, title_prefix=""):
+    # Calculate total number of geonus
+    # WARNING : if you don't use scaled spectra, this doesn't mean anything
+
+    geonus_tot_Th = np.sum(N_Th)
+    geonus_tot_U = np.sum(N_U)
+    geonus_tot = geonus_tot_Th + geonus_tot_U
+
     # Plotting the data
     plt.step(energy_array, N_Th, where='mid', label='Th232', color='blue')
     plt.step(energy_array, N_U, where='mid', label='U238', color='red')
     plt.step(energy_array, N_U + N_Th, where='mid', label='total', color='green')
 
+    # Add grid
+    plt.grid(True)  # Show grid
+    plt.grid(which = 'both', color='lightgray', linestyle='--', linewidth=0.5)
+
+    # Adding geonus_tot label to the plot
+    label_text = f'geonus_tot = {geonus_tot:.2f}\ngeonus_tot_Th = {geonus_tot_Th:.2f}\ngeonus_tot_U = {geonus_tot_U:.2f}'
+    plt.text(0.95, 0.95, label_text, transform=plt.gca().transAxes, ha='right', va='top', fontsize=10,
+             bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.5'))
+
     plt.xlabel('E_nu [MeV]')
     plt.yscale('log')
-    plt.ylabel('Expected geonu count [AU]')
-    plt.title(f'Expected geonus {title_prefix}')
+    plt.ylabel('Expected geonu count')
+    plt.title(f'Expected geonus \n {title_prefix}')
 
     plt.ylim(bottom=np.max(N_U + N_Th) / 20)
     plt.minorticks_on()
-    plt.legend(loc='upper right')
+    plt.legend(loc='lower left')
 
     # Save plot if spec_save is True
     if spec_save:
@@ -960,23 +976,49 @@ def plot_spec(N_Th, N_U, spec_save, grid_1d_size_crust, grid_1d_size_mantle, abd
 ###         different 1d grid sizes (for mantle mostly)
 
 def plot_rat(N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, grid_1d_size_crust, grid_1d_size_mantle, abd_set_1, abd_set_2, title_prefix_1 ="", title_prefix_2 =""):
+    # Calculate total number of geonus
+    # WARNING : if you don't use scaled spectra, this doesn't mean anything
+
+    geonus_tot_Th_1 = np.sum(N_Th_1)
+    geonus_tot_U_1 = np.sum(N_U_1)
+    geonus_tot_1 = geonus_tot_Th_1 + geonus_tot_U_1
+
+    geonus_tot_Th_2 = np.sum(N_Th_2)
+    geonus_tot_U_2 = np.sum(N_U_2)
+    geonus_tot_2 = geonus_tot_Th_2 + geonus_tot_U_2
+
     # Plotting the data for spectra
     plt.step(energy_array, N_U_1 + N_Th_1, where='mid', label='total', color='green')
 
+    # Add grid
+    plt.grid(True)  # Show grid
+    plt.grid(which = 'both', color='lightgray', linestyle='--', linewidth=0.5)
+
+    # Adding geonus_tot label to the plot
+    label_text = f'geonus_tot = {geonus_tot_1:.2f}\ngeonus_tot_Th = {geonus_tot_Th_1:.2f}\ngeonus_tot_U = {geonus_tot_U_1:.2f}'
+    plt.text(0.95, 0.95, label_text, transform=plt.gca().transAxes, ha='right', va='top', fontsize=10,
+             bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.5'))
+
     plt.xlabel('E_nu [MeV]')
     plt.yscale('log')
-    plt.ylabel('Expected geonu count [AU]')
-    plt.title(f'Expected geonus {title_prefix_1}')
+    plt.ylabel('Expected geonu count')
+    plt.title(f'Expected geonus \n {title_prefix_1}')
 
     #plt.ylim(bottom=6e-11)
     plt.ylim(bottom=np.max(N_U_1 + N_Th_1) / 20)
     plt.minorticks_on()
-    plt.legend(loc='upper right')
+    plt.legend(loc='lower left')
 
     # Save plot if spec_save is True
     if spec_save:
         # Construct the directory path based on the naming scheme
-        dir_name = 'ratio_plots'
+        # the dir is named after the abd set, energy bins and grid
+        # spacing of the _2 fluxes = reference
+        #
+        # in the main script, this will be the one with standard
+        # oscillation params from James/Tony fit
+
+        dir_name = f'{abd_set_2}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}'
         save_dir = os.path.join("..", "plots", dir_name)
 
         # Check if spectrum plot directory exists, create it if not
@@ -1014,20 +1056,29 @@ def plot_rat(N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, grid_1d_size_crust, grid_1
 
     plt.step(energy_array, N_U_2 + N_Th_2, where='mid', label='total', color='green')
 
+    # Add grid
+    plt.grid(True)  # Show grid
+    plt.grid(which = 'both', color='lightgray', linestyle='--', linewidth=0.5)  # Customize grid appearance
+
+    # Adding geonus_tot label to the plot
+    label_text = f'geonus_tot = {geonus_tot_2:.2f}\ngeonus_tot_Th = {geonus_tot_Th_2:.2f}\ngeonus_tot_U = {geonus_tot_U_2:.2f}'
+    plt.text(0.95, 0.95, label_text, transform=plt.gca().transAxes, ha='right', va='top', fontsize=10,
+             bbox=dict(facecolor='white', alpha=0.7, edgecolor='none', boxstyle='round,pad=0.5'))
+
     plt.xlabel('E_nu [MeV]')
     plt.yscale('log')
-    plt.ylabel('Expected geonu count [AU]')
-    plt.title(f'Expected geonus {title_prefix_2}')
+    plt.ylabel('Expected geonu count')
+    plt.title(f'Expected geonus \n {title_prefix_2}')
 
     #plt.ylim(bottom=6e-11)
     plt.ylim(bottom=np.max(N_U_2 + N_Th_2) / 20)
     plt.minorticks_on()
-    plt.legend(loc='upper right')
+    plt.legend(loc='lower left')
 
     # Save plot if spec_save is True
     if spec_save:
         # Construct the directory path based on the naming scheme
-        dir_name = 'ratio_plots'
+        dir_name = f'{abd_set_2}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}'
         save_dir = os.path.join("..", "plots", dir_name)
 
         # Check if spectrum plot directory exists, create it if not
@@ -1066,18 +1117,22 @@ def plot_rat(N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, grid_1d_size_crust, grid_1
 
     plt.step(energy_array, (N_U_1 + N_Th_1) / (N_U_2 + N_Th_2), where='mid', label='total', color='green')
 
+    # Add grid
+    plt.grid(True)  # Show grid
+    plt.grid(which = 'both', color='lightgray', linestyle='--', linewidth=0.5)  # Customize grid appearance
+
     plt.xlabel('E_nu [MeV]')
     plt.ylabel('Expected geonu count ratio')
-    plt.title(f'Ratio of expected geonus, {title_prefix_1}_{abd_set_1} / {title_prefix_2}_{abd_set_2}')
+    plt.title(f'Ratio of expected geonus, \n {title_prefix_1}_{abd_set_1} / {title_prefix_2}_{abd_set_2}')
 
-    plt.ylim(bottom=0.92, top=1.2)
+    plt.ylim(bottom=0.92, top=1.15)
     plt.minorticks_on()
-    plt.legend(loc='upper right')
+    plt.legend(loc='lower left')
 
     # Save plot if spec_save is True
     if spec_save:
         # Construct the directory path based on the naming scheme
-        dir_name = 'ratio_plots'
+        dir_name = f'{abd_set_2}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}'
         save_dir = os.path.join("..", "plots", dir_name)
 
         # Check if spectrum plot directory exists, create it if not
