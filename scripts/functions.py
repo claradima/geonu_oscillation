@@ -26,21 +26,53 @@ def get_memory_usage():
 ### returns : x_coords, y_coords, z_coords , dist_sq
 
 def create_3d_grid(grid_counts, halfside = 6371):
+    # would need 637.1 for 20 km spacing
+    # 1275 for 5 km spacing
+    # 320 for 40 km spacing
+    # 285 for 45 km spacing
+    # 215 for 60km spacing
+    # 160 for 80km spacing
 
     coords = np.linspace(- halfside, halfside, grid_counts)
     grid_1d_size = coords[1] - coords[0]
-
+    print('1d coords created')
+    get_memory_usage()
+    print('meshgriding now')
     x_coords, y_coords, z_coords = np.meshgrid(coords, coords, coords)
+    print('done')
+    get_memory_usage()
+    print('don\'t need 1d coords anymore; delete')
+    del coords
+    print('deleted')
+    get_memory_usage()
+    print('computing distances and putting grid specs together')
     dist_sq = x_coords**2 + y_coords**2 + z_coords**2
     grid_specs = [x_coords, y_coords, z_coords, dist_sq]
+    print('grid specs put together')
+    get_memory_usage()
+    print('checking if deleting separate x_coords does anything')
+    del x_coords
+    del y_coords
+    del z_coords
+    del dist_sq
+    print('deleted')
+    get_memory_usage()
 
-    return grid_specs
+    return grid_specs, grid_1d_size
 
 ### Creates spherical shell from 3d Cartesian grid
 ### inputs : inner_rad; outer_rad, sublayers (number of subls)
 ###          equal height; grid_specs = x, y, z from meshgrid
 ###          dist^2 = x^2 + y^2 + z^2
 ### returns : x_coords, y_coords, z_coords , dist_sq
+
+### TO DO : I think defining cut_shells in this way avoids my issue of
+###         having different data types if you have one or multiple sublayers
+
+### Layered Earth Model : crust 6350 - 6371 km
+###                       CLM 6196 - 6350 km
+###                       DM 4202 - 6196 km
+###                       EM 3480 - 4202 km
 
 def cut_shell(inner_rad, outer_rad, sublayers, grid_specs):
     x_coords, y_coords, z_coords, dist_sq = grid_specs
@@ -78,77 +110,76 @@ def cut_shell(inner_rad, outer_rad, sublayers, grid_specs):
 ### off from there to make things more flexible in terms of
 ### adding new Earth models;
 
-def set_abund (set_name):
+def set_abund(set_name):
+    # Check if the set_name is valid
     if set_name not in ['low', 'mid', 'high']:
-        print('invalid abundance set name; select from mid, low or high')
-        print('can add new sets in function def in functions.py')
-        print('you can even make this nicer and move the data in an external file, have abundances read off from there together with other details of the earth model :)')
-        print('up to you tho no pressure')
+        print('Invalid abundance set name; select from low, mid, or high.')
+        print('You can add new sets in the function definition in functions.py.')
+        print('Consider storing the data in an external file for flexibility.')
         sys.exit()
 
-    # Placeholder definitions for IDE recognition
-    A_Th_c = 0
-    A_U_c = 0
-    A_Th_CLM = 0
-    A_U_CLM = 0
-    A_Th_DM = 0
-    A_U_DM = 0
-    A_Th_EM = 0
-    A_U_EM = 0
-    rho_c = 0
-    rho_CLM = 0
-    rho_DM = 0
-    rho_EM = 0
-
-    low = {
-        "A_Th_c": 5 * (10 ** (-6)),
-        "A_U_c": 1 * (10 ** (-6)),
-        "A_Th_CLM": 53 * (10 ** (-9)),
-        "A_U_CLM": 13 * (10 ** (-9)),
-        "A_Th_DM": 17.52 * (10 ** (-9)),
-        "A_U_DM": 6.4 * (10 ** (-9)),
-        "A_Th_EM": 90 * (10 ** (-9)),
-        "A_U_EM": 15 * (10 ** (-9)),
-        "rho_c": 2.7,
-        "rho_CLM": 3.3,
-        "rho_DM": 3.3,
-        "rho_EM": 3.3
+    # Abundance data for each set
+    abundances = {
+        "low": {
+            "A_Th_c": 5 * (10 ** (-6)),
+            "A_U_c": 1 * (10 ** (-6)),
+            "A_Th_CLM": 53 * (10 ** (-9)),
+            "A_U_CLM": 13 * (10 ** (-9)),
+            "A_Th_DM": 17.52 * (10 ** (-9)),
+            "A_U_DM": 6.4 * (10 ** (-9)),
+            "A_Th_EM": 90 * (10 ** (-9)),
+            "A_U_EM": 15 * (10 ** (-9)),
+            "rho_c": 2.7,
+            "rho_CLM": 3.3,
+            "rho_DM": 3.3,
+            "rho_EM": 3.3
+        },
+        "mid": {
+            "A_Th_c": 5 * (10 ** (-6)),
+            "A_U_c": 1 * (10 ** (-6)),
+            "A_Th_CLM": 147 * (10 ** (-9)),
+            "A_U_CLM": 33 * (10 ** (-9)),
+            "A_Th_DM": 21.9 * (10 ** (-9)),
+            "A_U_DM": 8 * (10 ** (-9)),
+            "A_Th_EM": 147 * (10 ** (-9)),
+            "A_U_EM": 33 * (10 ** (-9)),
+            "rho_c": 2.7,
+            "rho_CLM": 3.3,
+            "rho_DM": 3.3,
+            "rho_EM": 3.3
+        },
+        "high": {
+            "A_Th_c": 5 * (10 ** (-6)),
+            "A_U_c": 1 * (10 ** (-6)),
+            "A_Th_CLM": 427 * (10 ** (-9)),
+            "A_U_CLM": 83 * (10 ** (-9)),
+            "A_Th_DM": 26.28 * (10 ** (-9)),
+            "A_U_DM": 9.6 * (10 ** (-9)),
+            "A_Th_EM": 221 * (10 ** (-9)),
+            "A_U_EM": 57 * (10 ** (-9)),
+            "rho_c": 2.7,
+            "rho_CLM": 3.3,
+            "rho_DM": 3.3,
+            "rho_EM": 3.3
+        }
     }
 
-    mid = {
-        "A_Th_c": 5 * (10 ** (-6)),
-        "A_U_c": 1 * (10 ** (-6)),
-        "A_Th_CLM": 147 * (10 ** (-9)),
-        "A_U_CLM": 33 * (10 ** (-9)),
-        "A_Th_DM": 21.9 * (10 ** (-9)),
-        "A_U_DM": 8 * (10 ** (-9)),
-        "A_Th_EM": 147 * (10 ** (-9)),
-        "A_U_EM": 33 * (10 ** (-9)),
-        "rho_c": 2.7,
-        "rho_CLM": 3.3,
-        "rho_DM": 3.3,
-        "rho_EM": 3.3
-    }
+    # Get the correct abundance set
+    if set_name not in abundances:
+        print("Error: Invalid abundance set.")
+        sys.exit()
 
-    high = {
-        "A_Th_c": 5 * (10 ** (-6)),
-        "A_U_c": 1 * (10 ** (-6)),
-        "A_Th_CLM": 427 * (10 ** (-9)),
-        "A_U_CLM": 83 * (10 ** (-9)),
-        "A_Th_DM": 26.28 * (10 ** (-9)),
-        "A_U_DM": 9.6 * (10 ** (-9)),
-        "A_Th_EM": 221 * (10 ** (-9)),
-        "A_U_EM": 57 * (10 ** (-9)),
-        "rho_c": 2.7,
-        "rho_CLM": 3.3,
-        "rho_DM": 3.3,
-        "rho_EM": 3.3
-    }
+    # Retrieve the abundances from the selected set
+    selected_abundance = abundances[set_name]
 
-    abundances = set_name
-    globals().update(abundances)
+    # Print selected abundance set for debugging
+    print(f"Selected {set_name} abundance: {selected_abundance}")
 
-    return A_Th_c, A_U_c, A_Th_CLM, A_U_CLM, A_Th_DM, A_U_DM, A_Th_EM, A_U_EM, rho_c, rho_CLM, rho_DM, rho_EM
+    # Return all the values from the selected set
+    return (selected_abundance["A_Th_c"], selected_abundance["A_U_c"], selected_abundance["A_Th_CLM"],
+            selected_abundance["A_U_CLM"], selected_abundance["A_Th_DM"], selected_abundance["A_U_DM"],
+            selected_abundance["A_Th_EM"], selected_abundance["A_U_EM"], selected_abundance["rho_c"],
+            selected_abundance["rho_CLM"], selected_abundance["rho_DM"], selected_abundance["rho_EM"])
 
 
 ### Set fixed parameters : this code is intended to run with
@@ -216,7 +247,8 @@ def set_lambda_mu():
 def set_energy_array(no_E_bins):
     global energy_array
     print('setting energy array')
-    energy_array = np.linspace(E_th, 3.3, no_E_bins)
+    energy_array =   np.linspace( round(E_th, 2) , 3.3, no_E_bins)
+    # this would be an issue if E_th would be rounded down
 
 ### Calculate distance between a set of points and SNO+
 ### inputs : points_array (must be a 2D array where each element
@@ -229,7 +261,8 @@ def set_energy_array(no_E_bins):
 def calc_relative_dist(points_array, SNO_r = np.array([0, 0, 6369])):
     # Calculate the Euclidean distance using vectorized operations
     print("   ")
-    if SNO_r == np.array([0, 0, 6369]):
+    if np.array_equal(SNO_r, np.array([0, 0, 6369])):
+
         print('Position of SNO+ set to (0, 0, 6369) by default')
     relative_distances = np.linalg.norm(points_array - SNO_r, axis=1)
 
@@ -244,7 +277,7 @@ def calc_relative_dist(points_array, SNO_r = np.array([0, 0, 6369])):
 ###        about this; will have to do for now
 ### TO DO (MAYBE) : change things slightly
 
-def calc_sigma_IBD(energy_array):
+def calc_sigma_IBD():
     global sigma
     sigma = ((energy_array - E_th + m_e) ** 2) * ((1 - (m_e) ** 2 / ((energy_array - E_th + m_e) ** 2)) ** (1 / 2))
 
@@ -395,7 +428,7 @@ def avg_dist(crust_grid, CLM_grid, DM_grids, EM_grids, grid_1d_size_crust, grid_
 ### relative distances directly rather than the points array
 ### Can do this because we only care about distance really
 
-def calc_P_ee(energy_array, points_array, theta_12, theta_13, delta_m_21_squared):
+def calc_P_ee(points_array, theta_12, delta_m_21_squared):
 
     relative_distance_array = calc_relative_dist(points_array)
 
@@ -426,7 +459,7 @@ def calc_P_ee(energy_array, points_array, theta_12, theta_13, delta_m_21_squared
 ###
 ### inputs : points_array (must be a 2D array where each element
 ###          is (x, y, z) with the coords of each point
-###          energy_array
+###          energy_array defined globally! no input
 ###          grid_1d_size : distance betweem two consecutive
 ###          grid points in 1d; used to compute volume element
 ###          theta_12, delta_m_21_squared : default values given (best fit
@@ -456,17 +489,26 @@ def calc_P_ee(energy_array, points_array, theta_12, theta_13, delta_m_21_squared
 ### relative distances directly rather than the points array
 ### Can do this because we only care about distance really
 
-def vol_integral(points_array, energy_array, grid_1d_size, theta_12, delta_m_21_squared, A_Th, A_U, rho):
+def vol_integral(points_array, grid_1d_size, theta_12,
+                 delta_m_21_squared, A_Th, A_U, rho):
+    print('test test') #TEMP
     dV = grid_1d_size ** 3
-
     relative_distance_array = calc_relative_dist(points_array)
+    print(f'relative_distance_array : {relative_distance_array}') # TEMP
     print("Relative distance array computed successfully")
-    P_ee_array = calc_P_ee(energy_array, points_array, theta_12, delta_m_21_squared)
-    print("P_ee_array computed successfully")
+    P_ee_array = calc_P_ee(points_array, theta_12, delta_m_21_squared)
 
+    print("P_ee_array computed successfully")
+    print(f'P_ee_array : {P_ee_array}')#TEMP
+    print(f'shape P_ee_array : {P_ee_array.shape}')#TEMP
+
+    print(f'P_ee_array shape: {P_ee_array.shape}')
+    print(f'rho: {rho}')
+    print(f'dV: {dV}')
     # Compute sum_Th
     sum_Th = np.sum(P_ee_array * ((A_Th * rho) / (4 * np.pi * (relative_distance_array ** 2)))[np.newaxis, :] * dV,
                     axis=1)
+    print(f'sum_Th : {sum_Th}')#TEMP
 
     print("sum_Th computed successfully")
 
@@ -474,7 +516,7 @@ def vol_integral(points_array, energy_array, grid_1d_size, theta_12, delta_m_21_
     sum_U = np.sum(P_ee_array * ((A_U * rho) / (4 * np.pi * (relative_distance_array ** 2)))[np.newaxis, :] * dV,
                    axis=1)
     print("sum_U computed successfully")
-
+    print(f'sum_U : {sum_U}')
     print('computed; deleting useless stuff')
     get_memory_usage()
     del P_ee_array
@@ -502,14 +544,19 @@ def vol_integral(points_array, energy_array, grid_1d_size, theta_12, delta_m_21_
 ### TO DO : Test this when you get the final script!! compare
 ###         plots with plots made with Optimized_Memory_v4.ipynb
 
-def add_vol_integrals(grids_array, energy_array, grid_1d_size, theta_12, delta_m_21_squared, A_Th, A_U, rho):
+def add_vol_integrals(grids_array, grid_1d_size, theta_12, delta_m_21_squared, A_Th, A_U, rho):
 
     print('adding contributions from sublayers')
-    total_Th = np.zeros(energy_array)
-    total_U = np.zeros(energy_array)
+    total_Th = np.zeros(energy_array.shape)
+    total_U = np.zeros(energy_array.shape)
+
 
     for i in range(len(grids_array)):
-        integral_Th, integral_U = vol_integral(grids_array[i], energy_array, grid_1d_size, theta_12, delta_m_21_squared,A_Th, A_U, rho)
+        integral_Th, integral_U = vol_integral(grids_array[i], grid_1d_size, theta_12, delta_m_21_squared,A_Th, A_U, rho)
+        print(f'integral_Th : {integral_Th}')
+        print(f'integral_U : {integral_U}')
+
+
         total_Th = total_Th + integral_Th
         total_U = total_U + integral_U
 
@@ -560,7 +607,7 @@ def add_vol_integrals(grids_array, energy_array, grid_1d_size, theta_12, delta_m
 ### relative distances directly rather than the points array
 ### Can do this because we only care about distance really
 
-def vol_integral_const_P_ee(points_array, energy_array, grid_1d_size, A_Th, A_U, rho, P_ee_mid, P_ee_stdev):
+def vol_integral_const_P_ee(points_array, grid_1d_size, A_Th, A_U, rho, P_ee_mid, P_ee_stdev):
 
     dV = grid_1d_size**3
     relative_distance_array = calc_relative_dist(points_array)
@@ -607,18 +654,18 @@ def vol_integral_const_P_ee(points_array, energy_array, grid_1d_size, A_Th, A_U,
 ### TO DO : Test this when you get the final script!! compare
 ###         plots with plots made with Optimized_Memory_v4.ipynb
 
-def add_vol_integrals(grids_array, energy_array, grid_1d_size, theta_12, delta_m_21_squared, A_Th, A_U, rho):
+def add_vol_integrals_const_P_ee(grids_array, grid_1d_size, A_Th, A_U, rho, P_ee_mid, P_ee_stdev):
 
     print('adding contributions from sublayers')
-    total_mid_Th = np.zeros(energy_array)
-    total_mid_U = np.zeros(energy_array)
-    total_low_Th = np.zeros(energy_array)
-    total_low_U = np.zeros(energy_array)
-    total_high_Th = np.zeros(energy_array)
-    total_high_U = np.zeros(energy_array)
+    total_mid_Th = np.zeros(energy_array.shape)
+    total_mid_U = np.zeros(energy_array.shape)
+    total_low_Th = np.zeros(energy_array.shape)
+    total_low_U = np.zeros(energy_array.shape)
+    total_high_Th = np.zeros(energy_array.shape)
+    total_high_U = np.zeros(energy_array.shape)
 
     for i in range(len(grids_array)):
-        integral_mid_Th, integral_mid_U, integral_low_Th, integral_low_U, integral_high_Th, integral_high_U = vol_integral_const_P_ee(grids_array[i], energy_array, grid_1d_size, theta_12, delta_m_21_squared,A_Th, A_U, rho)
+        integral_mid_Th, integral_mid_U, integral_low_Th, integral_low_U, integral_high_Th, integral_high_U = vol_integral_const_P_ee(grids_array[i], grid_1d_size, A_Th, A_U, rho, P_ee_mid, P_ee_stdev)
         total_mid_Th = total_mid_Th + integral_mid_Th
         total_mid_U = total_mid_U + integral_mid_U
         total_low_Th = total_low_Th + integral_low_Th
@@ -679,7 +726,7 @@ def rebin_counts(initial_bins, counts_in_initial_bins, final_bin_midpoints):
 ### probably save results in csv files or something like that
 ### as well
 
-def get_emission_fluxes(energy_array, plot_spectrum = False):
+def get_emission_fluxes(plot_spectrum = False):
 
     global dn_dE_rebinned_U, dn_dE_rebinned_Th
 
@@ -772,7 +819,7 @@ def calc_exp_spec(U_vol_int, Th_vol_int):
 ###
 ### inputs : N_U, N_Tot - spectra in arbitrary units,
 ###          obtained with function above
-###          energy_array : to calc dE
+###          energy_array : to calc dE; defined globally
 ###          livetime : total observation time [s]
 ### returns : N_U_scaled, N_Th_scaled : scaled spectra from
 ###           each emitter
@@ -783,12 +830,18 @@ def calc_exp_spec(U_vol_int, Th_vol_int):
 ###        'unscaled' spectra, but they have to be consistent
 ###        if we compute flux ratios
 
-def calc_exp_spec_scale(energy_array, N_Th, N_U, livetime):
-    scaling_ct = 3.268 * 10**(-6)
+def calc_exp_spec_scale(N_Th, N_U, livetime):
+    scaling_ct = 0.3268 * 1000
+    # TO DO : need to figure out scaling factor !!!!
     dE = energy_array[1] - energy_array[0]
 
     N_Th_scaled = N_Th * scaling_ct * dE * livetime
     N_U_scaled = N_U * scaling_ct * dE * livetime
+
+    print(f'scaling_ct : {scaling_ct}') #TEMP
+    print(f'dE : {dE}') #TEMP
+    print(f'livetime : {livetime}') #TEMP
+    print(f'Overall scaling : {scaling_ct * dE * livetime}') #TEMP
 
     print(f'Computed scaled spectra for a livetime of {livetime} s = {livetime/86400} days')
 
@@ -812,7 +865,8 @@ def calc_exp_spec_scale(energy_array, N_Th, N_U, livetime):
 
 ### Plot spectrum
 ###
-### inputs : energy_array, N_Th, N_U : arays of same len
+### inputs : energy_array defined globally
+###          N_Th, N_U : arays of same len
 ###          spec_save : bool (set true if you want plot saved)
 ###          grid_1d_size_crust, grid_1d_size_mantle : floats
 ###          abd_set : str 'mid', 'low' or 'high'
@@ -827,18 +881,18 @@ def calc_exp_spec_scale(energy_array, N_Th, N_U, livetime):
 ###                 crust spacing in km + C + mantle spacing
 ###                 in km + M
 
-def plot_spec(energy_array, N_Th, N_U, spec_save, grid_1d_size_crust, grid_1d_size_mantle, abd_set, title_prefix=""):
+def plot_spec(N_Th, N_U, spec_save, grid_1d_size_crust, grid_1d_size_mantle, abd_set, title_prefix=""):
     # Plotting the data
     plt.step(energy_array, N_Th, where='mid', label='Th232', color='blue')
     plt.step(energy_array, N_U, where='mid', label='U238', color='red')
-    plt.step(energy_array, N_U + N_Th, where='mid', label='total', color='blue')
+    plt.step(energy_array, N_U + N_Th, where='mid', label='total', color='green')
 
     plt.xlabel('E_nu [MeV]')
     plt.yscale('log')
     plt.ylabel('Expected geonu count [AU]')
     plt.title(f'Expected geonus {title_prefix}')
 
-    plt.ylim(bottom=6e-11)
+    plt.ylim(bottom=np.max(N_U + N_Th) / 20)
     plt.minorticks_on()
     plt.legend(loc='upper right')
 
@@ -905,16 +959,17 @@ def plot_spec(energy_array, N_Th, N_U, spec_save, grid_1d_size_crust, grid_1d_si
 ### TO DO : might need to change to accommodate spectra of
 ###         different 1d grid sizes (for mantle mostly)
 
-def plot_rat(energy_array, N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, grid_1d_size_crust, grid_1d_size_mantle, abd_set_1, abd_set_2, title_prefix_1 ="", title_prefix_2 =""):
+def plot_rat(N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, grid_1d_size_crust, grid_1d_size_mantle, abd_set_1, abd_set_2, title_prefix_1 ="", title_prefix_2 =""):
     # Plotting the data for spectra
-    plt.step(energy_array, N_U_1 + N_Th_1, where='mid', label='total', color='blue')
+    plt.step(energy_array, N_U_1 + N_Th_1, where='mid', label='total', color='green')
 
     plt.xlabel('E_nu [MeV]')
     plt.yscale('log')
     plt.ylabel('Expected geonu count [AU]')
     plt.title(f'Expected geonus {title_prefix_1}')
 
-    plt.ylim(bottom=6e-11)
+    #plt.ylim(bottom=6e-11)
+    plt.ylim(bottom=np.max(N_U_1 + N_Th_1) / 20)
     plt.minorticks_on()
     plt.legend(loc='upper right')
 
@@ -957,14 +1012,15 @@ def plot_rat(energy_array, N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, grid_1d_size
 
     # second spectrum
 
-    plt.step(energy_array, N_U_2 + N_Th_2, where='mid', label='total', color='blue')
+    plt.step(energy_array, N_U_2 + N_Th_2, where='mid', label='total', color='green')
 
     plt.xlabel('E_nu [MeV]')
     plt.yscale('log')
     plt.ylabel('Expected geonu count [AU]')
     plt.title(f'Expected geonus {title_prefix_2}')
 
-    plt.ylim(bottom=6e-11)
+    #plt.ylim(bottom=6e-11)
+    plt.ylim(bottom=np.max(N_U_2 + N_Th_2) / 20)
     plt.minorticks_on()
     plt.legend(loc='upper right')
 
@@ -1008,7 +1064,7 @@ def plot_rat(energy_array, N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, grid_1d_size
     # Ratio plot
 
 
-    plt.step(energy_array, (N_U_1 + N_Th_1) / (N_U_2 + N_Th_2), where='mid', label='total', color='blue')
+    plt.step(energy_array, (N_U_1 + N_Th_1) / (N_U_2 + N_Th_2), where='mid', label='total', color='green')
 
     plt.xlabel('E_nu [MeV]')
     plt.ylabel('Expected geonu count ratio')
@@ -1147,7 +1203,7 @@ def calc_avg_P_ee_num_den(energy_array, grids, theta_12, theta_13, delta_m_21_sq
     P_ee = np.empty(len(grids), dtype = object)
 
     for i in range(len(grids)):
-        P_ee[i] = calc_P_ee(energy_array, grids[i], theta_13, delta_m_21_squared)
+        P_ee[i] = calc_P_ee(grids[i], delta_m_21_squared)
         print(f'P_ee values computed for layer {i} out of {len(grids)}')
 
     print('survival probabilities calculated')
@@ -1211,7 +1267,7 @@ def calc_avg_P_ee_num_den(energy_array, grids, theta_12, theta_13, delta_m_21_sq
 def calc_avg_P_ee_num_den_simple(energy_array, points_array, theta_12, theta_13, delta_m_21_squared, grid_1d_size, A_Th, A_U, rho, f_E_Th, f_E_U):
     print('calculating survival probabilities for layer')
 
-    P_ee = calc_P_ee(energy_array, points_array, theta_12, theta_13, delta_m_21_squared)
+    P_ee = calc_P_ee(points_array, theta_12, delta_m_21_squared)
     print('survival probability computed')
     print('calculating position weights')
 
@@ -1272,7 +1328,7 @@ def calc_var_P_ee_num(energy_array, grids, theta_12, theta_13, delta_m_21_square
     P_ee = np.empty(len(grids), dtype = object)
 
     for i in range(len(grids)):
-        P_ee[i] = calc_P_ee(energy_array, grids[i], theta_13, delta_m_21_squared)
+        P_ee[i] = calc_P_ee(grids[i], delta_m_21_squared)
         print(f'P_ee values computed for layer {i} out of {len(grids)}')
 
     print('survival probabilities calculated')
@@ -1319,7 +1375,7 @@ def calc_var_P_ee_num(energy_array, grids, theta_12, theta_13, delta_m_21_square
 def calc_avg_P_ee_num_den_simple(energy_array, points_array, theta_12, theta_13, delta_m_21_squared, grid_1d_size, A_Th, A_U, rho, f_E_Th, f_E_U, P_ee_average):
     print('calculating survival probabilities for layer')
 
-    P_ee = calc_P_ee(energy_array, points_array, theta_12, theta_13, delta_m_21_squared)
+    P_ee = calc_P_ee(points_array, theta_12, delta_m_21_squared)
     print('survival probability computed')
     print('calculating position weights')
 
@@ -1352,3 +1408,7 @@ def calc_P_ee_stdev(numerator_var_Th_c, numerator_var_U_c, numerator_var_Th_CLM,
     print(f'P_ee_stdev computed = {P_ee_stdev}')
 
     return P_ee_stdev
+
+def days_to_seconds(days):
+    seconds_per_day = 86400  # 24 * 60 * 60
+    return days * seconds_per_day
