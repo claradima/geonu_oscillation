@@ -881,7 +881,7 @@ def calc_exp_spec_scale(N_Th, N_U, livetime):
 ###                 crust spacing in km + C + mantle spacing
 ###                 in km + M
 
-def plot_spec(N_Th, N_U, spec_save, grid_1d_size_crust, grid_1d_size_mantle, abd_set, title_prefix=""):
+def plot_spec(N_Th, N_U, spec_save, plot_show, grid_1d_size_crust, grid_1d_size_mantle, abd_set, title_prefix=""):
     # Calculate total number of geonus
     # WARNING : if you don't use scaled spectra, this doesn't mean anything
 
@@ -915,7 +915,7 @@ def plot_spec(N_Th, N_U, spec_save, grid_1d_size_crust, grid_1d_size_mantle, abd
     # Save plot if spec_save is True
     if spec_save:
         # Construct the directory path based on the naming scheme
-        dir_name = f"{abd_set}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}"
+        dir_name = f"{abd_set}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}M"
         save_dir = os.path.join("..", "plots", dir_name)
 
         # Check if directory exists, create it if not
@@ -923,7 +923,7 @@ def plot_spec(N_Th, N_U, spec_save, grid_1d_size_crust, grid_1d_size_mantle, abd
             os.makedirs(save_dir)
 
         # Define the full file path with the title prefix
-        file_path = os.path.join(save_dir, f"{title_prefix}_spec_{abd_set}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}.pdf")
+        file_path = os.path.join(save_dir, f"{title_prefix}_spec_{abd_set}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}M.pdf")
 
         # Print the save location
         print(f"Saving plot in {file_path}")
@@ -933,7 +933,7 @@ def plot_spec(N_Th, N_U, spec_save, grid_1d_size_crust, grid_1d_size_mantle, abd
 
         # Save data to CSV
         csv_path = os.path.join(save_dir,
-                                f"{title_prefix}_spec_data_{abd_set}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}.csv")
+                                f"{title_prefix}_spec_data_{abd_set}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}M.csv")
 
         with open(csv_path, mode='w', newline='') as csv_file:
             writer = csv.writer(csv_file)
@@ -946,7 +946,8 @@ def plot_spec(N_Th, N_U, spec_save, grid_1d_size_crust, grid_1d_size_mantle, abd
         # Print confirmation of CSV save location
         print(f"Data saved in {csv_path}")
 
-    plt.show()
+    if plot_show:
+        plt.show()
 
 ### Plot spectrums and ratio
 ###
@@ -975,7 +976,7 @@ def plot_spec(N_Th, N_U, spec_save, grid_1d_size_crust, grid_1d_size_mantle, abd
 ### TO DO : might need to change to accommodate spectra of
 ###         different 1d grid sizes (for mantle mostly)
 
-def plot_rat(N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, grid_1d_size_crust, grid_1d_size_mantle, abd_set_1, abd_set_2, title_prefix_1 ="", title_prefix_2 =""):
+def plot_rat(N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, plot_show, grid_1d_size_crust, grid_1d_size_mantle, abd_set_1, abd_set_2, title_prefix_1 ="", title_prefix_2 =""):
     # Calculate total number of geonus
     # WARNING : if you don't use scaled spectra, this doesn't mean anything
 
@@ -1018,7 +1019,7 @@ def plot_rat(N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, grid_1d_size_crust, grid_1
         # in the main script, this will be the one with standard
         # oscillation params from James/Tony fit
 
-        dir_name = f'{abd_set_2}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}'
+        dir_name = f'{abd_set_2}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}M'
         save_dir = os.path.join("..", "plots", dir_name)
 
         # Check if spectrum plot directory exists, create it if not
@@ -1027,7 +1028,7 @@ def plot_rat(N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, grid_1d_size_crust, grid_1
 
         # Define the full file path with the title prefix
         file_path = os.path.join(save_dir,
-                                 f"{title_prefix_1}_spec_{abd_set_1}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}.pdf")
+                                 f"{title_prefix_1}_spec_{abd_set_1}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}M.pdf")
 
         # Print the save location
         print(f"Saving plot in {file_path}")
@@ -1037,7 +1038,7 @@ def plot_rat(N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, grid_1d_size_crust, grid_1
 
         # Save data to CSV
         csv_path = os.path.join(save_dir,
-                                f"{title_prefix_1}_spec_data_{abd_set_1}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}.csv")
+                                f"{title_prefix_1}_spec_data_{abd_set_1}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}M.csv")
 
         with open(csv_path, mode='w', newline='') as csv_file:
             writer = csv.writer(csv_file)
@@ -1050,7 +1051,8 @@ def plot_rat(N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, grid_1d_size_crust, grid_1
         # Print confirmation of CSV save location
         print(f"Data saved in {csv_path}")
 
-    plt.show()
+    if plot_show:
+        plt.show()
 
     # second spectrum
 
@@ -1078,7 +1080,7 @@ def plot_rat(N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, grid_1d_size_crust, grid_1
     # Save plot if spec_save is True
     if spec_save:
         # Construct the directory path based on the naming scheme
-        dir_name = f'{abd_set_2}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}'
+        dir_name = f'{abd_set_2}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}M'
         save_dir = os.path.join("..", "plots", dir_name)
 
         # Check if spectrum plot directory exists, create it if not
@@ -1087,7 +1089,7 @@ def plot_rat(N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, grid_1d_size_crust, grid_1
 
         # Define the full file path with the title prefix
         file_path = os.path.join(save_dir,
-                                 f"{title_prefix_2}_spec_{abd_set_2}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}.pdf")
+                                 f"{title_prefix_2}_spec_{abd_set_2}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}M.pdf")
 
         # Print the save location
         print(f"Saving plot in {file_path}")
@@ -1097,7 +1099,7 @@ def plot_rat(N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, grid_1d_size_crust, grid_1
 
         # Save data to CSV
         csv_path = os.path.join(save_dir,
-                                f"{title_prefix_2}_spec_data_{abd_set_2}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}.csv")
+                                f"{title_prefix_2}_spec_data_{abd_set_2}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}M.csv")
 
         with open(csv_path, mode='w', newline='') as csv_file:
             writer = csv.writer(csv_file)
@@ -1110,7 +1112,8 @@ def plot_rat(N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, grid_1d_size_crust, grid_1
         # Print confirmation of CSV save location
         print(f"Data saved in {csv_path}")
 
-    plt.show()
+    if plot_show:
+        plt.show()
 
     # Ratio plot
 
@@ -1132,7 +1135,7 @@ def plot_rat(N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, grid_1d_size_crust, grid_1
     # Save plot if spec_save is True
     if spec_save:
         # Construct the directory path based on the naming scheme
-        dir_name = f'{abd_set_2}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}'
+        dir_name = f'{abd_set_2}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}M'
         save_dir = os.path.join("..", "plots", dir_name)
 
         # Check if spectrum plot directory exists, create it if not
@@ -1141,7 +1144,7 @@ def plot_rat(N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, grid_1d_size_crust, grid_1
 
         # Define the full file path with the title prefix
         file_path = os.path.join(save_dir,
-                                 f"ratio_{title_prefix_1}_{abd_set_1}_{title_prefix_2}_{abd_set_2}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}.pdf")
+                                 f"ratio_{title_prefix_1}_{abd_set_1}_{title_prefix_2}_{abd_set_2}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}M.pdf")
 
         # Print the save location
         print(f"Saving plot in {file_path}")
@@ -1151,7 +1154,7 @@ def plot_rat(N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, grid_1d_size_crust, grid_1
 
         # Save data to CSV
         csv_path = os.path.join(save_dir,
-                                f"{title_prefix_1}_{abd_set_1}_{title_prefix_2}_{abd_set_2}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}.csv")
+                                f"{title_prefix_1}_{abd_set_1}_{title_prefix_2}_{abd_set_2}_{len(energy_array)}E{int(np.floor(grid_1d_size_crust))}C{int(np.floor(grid_1d_size_mantle))}M.csv")
 
         with open(csv_path, mode='w', newline='') as csv_file:
             writer = csv.writer(csv_file)
@@ -1164,7 +1167,8 @@ def plot_rat(N_Th_1, N_U_1, N_Th_2, N_U_2, spec_save, grid_1d_size_crust, grid_1
         # Print confirmation of CSV save location
         print(f"Data saved in {csv_path}")
 
-    plt.show()
+    if plot_show:
+        plt.show()
 
 
     ### Plotting comparison with constant P_ee with error

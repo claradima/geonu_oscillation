@@ -21,16 +21,16 @@ def main():
                         default=[0, 0, 6369],
                         help="Specify position of SNO detector SNO_r as three float values (default: [0, 0, 6369])")
     parser.add_argument('-abd', type = str, nargs = 1,
-                        default = 'mid',
+                        default = 'low',
                         help = 'Specify abundances. Pick from \'mid\',\'low\', \'high\'')
     parser.add_argument('-Ebins', type = int, nargs = 1,
                         default = 100, help = 'Specify number of energy bins')
     parser.add_argument('-cgridcount', type = int, nargs = 1,
-                        default = 820,
+                        default = 640,
                         help = 'Specify crust grid count (1d)') #690 for 18km
                                                                 #820 for 15.5 km
     parser.add_argument('-mgridcount', type = int, nargs = 1,
-                        default = 420, # 30 km for 420
+                        default = 160, # 30 km for 420
                                        # 28 km for 450
                         help = 'Specify crust grid count (1d)')
     parser.add_argument('-Cshells', type = int, nargs = 1,
@@ -59,6 +59,9 @@ def main():
     parser.add_argument('-livetime', type = float, nargs = 1,
                         default = 100,
                         help = 'Specify detector livetime in days; default 100')
+    parser.add_argument('-plotshow', type = bool, nargs = 1,
+                        default = True,
+                        help = 'Specify whether you want the plots shown while running the script; default no')
     # Parse the arguments
     args = parser.parse_args()
 
@@ -226,6 +229,7 @@ def main():
     N_Th_scaled, N_U_scaled, geonus_tot = calc_exp_spec_scale(N_Th = N_Th_unsc, N_U = N_U_unsc, livetime = days_to_seconds(args.livetime) )
     print('computed scaled spectrum. now plotting ...')
     plot_spec(N_Th=N_Th_scaled, N_U=N_U_scaled, spec_save=args.specsave,
+              plot_show= args.plotshow,
               grid_1d_size_crust=crust_grid_1d_size,
               grid_1d_size_mantle=mantle_grid_1d_size,
               abd_set=args.abd,
@@ -304,6 +308,7 @@ def main():
     plot_rat( N_Th_2 = N_Th_scaled, N_U_2 = N_U_scaled,
               N_Th_1 = N_Th_ctP_mid_scaled , N_U_1 = N_U_ctP_mid_scaled,
               spec_save = args.specsave,
+              plot_show=args.plotshow,
               grid_1d_size_crust = crust_grid_1d_size,
               grid_1d_size_mantle = mantle_grid_1d_size,
               abd_set_1 = args.abd,
@@ -371,6 +376,7 @@ def main():
     N_Th_low_theta_unsc, N_U_low_theta_unsc = calc_exp_spec(U_vol_int=int_U_low_theta, Th_vol_int=int_Th_low_theta)
     print('low theta_12 : computed unscaled spectrum.')
     #plot_spec(N_Th=N_Th_low_theta_unsc, N_U=N_U_low_theta_unsc, spec_save=args.specsave,
+    #          plot_show = args.plotshow,
     #         grid_1d_size_crust=crust_grid_1d_size,
     #          grid_1d_size_mantle=mantle_grid_1d_size,
     #          abd_set=args.abd,
@@ -383,6 +389,7 @@ def main():
                                                                                             livetime=days_to_seconds(args.livetime))
     print('low theta_12 : computed scaled spectrum. now plotting ...')
     plot_spec(N_Th=N_Th_low_theta_scaled, N_U=N_U_low_theta_scaled, spec_save=args.specsave,
+              plot_show=args.plotshow,
               grid_1d_size_crust=crust_grid_1d_size,
               grid_1d_size_mantle=mantle_grid_1d_size,
               abd_set=args.abd,
@@ -396,6 +403,7 @@ def main():
     plot_rat(N_Th_2=N_Th_scaled, N_U_2=N_U_scaled,
              N_Th_1=N_Th_low_theta_scaled, N_U_1=N_U_low_theta_scaled,
              spec_save=args.specsave,
+             plot_show=args.plotshow,
              grid_1d_size_crust=crust_grid_1d_size,
              grid_1d_size_mantle=mantle_grid_1d_size,
              abd_set_1=args.abd,
@@ -458,6 +466,7 @@ def main():
     N_Th_high_theta_unsc, N_U_high_theta_unsc = calc_exp_spec(U_vol_int=int_U_high_theta, Th_vol_int=int_Th_high_theta)
     print('high theta_12 : computed unscaled spectrum')
     #plot_spec(N_Th=N_Th_high_theta_unsc, N_U=N_U_high_theta_unsc, spec_save=args.specsave,
+    #          plot_show = args.plotshow,
     #          grid_1d_size_crust=crust_grid_1d_size,
     #          grid_1d_size_mantle=mantle_grid_1d_size,
     #          abd_set=args.abd,
@@ -470,6 +479,7 @@ def main():
                                                                                             livetime=days_to_seconds(args.livetime))
     print('high theta_12 : computed scaled spectrum. now plotting ...')
     plot_spec(N_Th=N_Th_high_theta_scaled, N_U=N_U_high_theta_scaled, spec_save=args.specsave,
+              plot_show=args.plotshow,
               grid_1d_size_crust=crust_grid_1d_size,
               grid_1d_size_mantle=mantle_grid_1d_size,
               abd_set=args.abd,
@@ -483,6 +493,7 @@ def main():
     plot_rat(N_Th_2=N_Th_scaled, N_U_2=N_U_scaled,
              N_Th_1=N_Th_high_theta_scaled, N_U_1=N_U_high_theta_scaled,
              spec_save=args.specsave,
+             plot_show=args.plotshow,
              grid_1d_size_crust=crust_grid_1d_size,
              grid_1d_size_mantle=mantle_grid_1d_size,
              abd_set_1=args.abd,
@@ -545,6 +556,7 @@ def main():
     N_Th_low_dm_unsc, N_U_low_dm_unsc = calc_exp_spec(U_vol_int=int_U_low_dm, Th_vol_int=int_Th_low_dm)
     print('low delta_m_21^2 : computed unscaled spectrum')
     #plot_spec(N_Th=N_Th_low_dm_unsc, N_U=N_U_low_dm_unsc, spec_save=args.specsave,
+    #          plot_show = args.plotshow,
     #          grid_1d_size_crust=crust_grid_1d_size,
     #          grid_1d_size_mantle=mantle_grid_1d_size,
     #          abd_set=args.abd,
@@ -558,6 +570,7 @@ def main():
                                                                                                 args.livetime))
     print('low delta_m_21^2 : computed scaled spectrum. now plotting ...')
     plot_spec(N_Th=N_Th_low_dm_scaled, N_U=N_U_low_dm_scaled, spec_save=args.specsave,
+              plot_show=args.plotshow,
               grid_1d_size_crust=crust_grid_1d_size,
               grid_1d_size_mantle=mantle_grid_1d_size,
               abd_set=args.abd,
@@ -571,6 +584,7 @@ def main():
     plot_rat(N_Th_2=N_Th_scaled, N_U_2=N_U_scaled,
              N_Th_1=N_Th_low_dm_scaled, N_U_1=N_U_low_dm_scaled,
              spec_save=args.specsave,
+             plot_show=args.plotshow,
              grid_1d_size_crust=crust_grid_1d_size,
              grid_1d_size_mantle=mantle_grid_1d_size,
              abd_set_1=args.abd,
@@ -633,6 +647,7 @@ def main():
     N_Th_high_dm_unsc, N_U_high_dm_unsc = calc_exp_spec(U_vol_int=int_U_high_dm, Th_vol_int=int_Th_high_dm)
     print('high delta_m_21^2 : computed unscaled spectrum')
     #plot_spec(N_Th=N_Th_high_dm_unsc, N_U=N_U_high_dm_unsc, spec_save=args.specsave,
+    #          plot_show = args.plotshow,
     #          grid_1d_size_crust=crust_grid_1d_size,
     #          grid_1d_size_mantle=mantle_grid_1d_size,
     #          abd_set=args.abd,
@@ -646,6 +661,7 @@ def main():
                                                                                           args.livetime))
     print('high delta_m_21^2 : computed scaled spectrum. now plotting ...')
     plot_spec(N_Th=N_Th_high_dm_scaled, N_U=N_U_high_dm_scaled, spec_save=args.specsave,
+              plot_show=args.plotshow,
               grid_1d_size_crust=crust_grid_1d_size,
               grid_1d_size_mantle=mantle_grid_1d_size,
               abd_set=args.abd,
@@ -659,6 +675,7 @@ def main():
     plot_rat(N_Th_2=N_Th_scaled, N_U_2=N_U_scaled,
              N_Th_1=N_Th_high_dm_scaled, N_U_1=N_U_high_dm_scaled,
              spec_save=args.specsave,
+             plot_show=args.plotshow,
              grid_1d_size_crust=crust_grid_1d_size,
              grid_1d_size_mantle=mantle_grid_1d_size,
              abd_set_1=args.abd,
