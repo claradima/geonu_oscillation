@@ -21,7 +21,7 @@ def main():
                         default=[0, 0, 6369],
                         help="Specify position of SNO detector SNO_r as three float values (default: [0, 0, 6369])")
     parser.add_argument('-abd', type = str, nargs = 1,
-                        default = 'low',
+                        default = 'mid',
                         help = 'Specify abundances. Pick from \'mid\',\'low\', \'high\'')
     parser.add_argument('-Ebins', type = int, nargs = 1,
                         default = 100, help = 'Specify number of energy bins')
