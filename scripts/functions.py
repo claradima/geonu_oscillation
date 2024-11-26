@@ -6,6 +6,7 @@ import psutil
 import os
 import argparse
 import csv
+import pandas as pd
 
 
 ### Prints current memory usage ###
@@ -262,7 +263,6 @@ def calc_relative_dist(points_array, SNO_r = np.array([0, 0, 6369])):
     # Calculate the Euclidean distance using vectorized operations
     print("   ")
     if np.array_equal(SNO_r, np.array([0, 0, 6369])):
-
         print('Position of SNO+ set to (0, 0, 6369) by default')
     relative_distances = np.linalg.norm(points_array - SNO_r, axis=1)
 
@@ -1471,3 +1471,44 @@ def calc_P_ee_stdev(numerator_var_Th_c, numerator_var_U_c, numerator_var_Th_CLM,
 def days_to_seconds(days):
     seconds_per_day = 86400  # 24 * 60 * 60
     return days * seconds_per_day
+
+### Given 2 csv files with spectra, extract spectra info, plot and save ratio
+
+def extract_columns(csv_title, path=None):
+    # Extract the folder title from the file title
+    try:
+        folder_name = '_'.join(csv_title.split('_')[1:]).split('.')[0]
+        if path is None:
+            print(f'Looking for file in folder: ../plots/{folder_name}')
+    except IndexError:
+        raise ValueError(
+            "Invalid file title format. "
+            "Ensure it's in the format 'blahblah_abd_eEcCmM.csv', "
+            "where abd is the abundance set name (e.g., mid, low, high), and e, c, m "
+            "represent the number of energy bins, crust spacing, and mantle spacing."
+        )
+
+    # Construct the file path if not provided
+    if path is None:
+        file_path = os.path.join('..', 'plots', folder_name, csv_title)
+    else:
+        file_path = os.path.join(path, csv_title)
+
+    # Check if the file exists
+    if not os.path.isfile(file_path):
+        raise FileNotFoundError(f"The file {file_path} does not exist.")
+
+    # Read the CSV file
+    try:
+        data = pd.read_csv(file_path)
+    except Exception as e:
+        raise ValueError(f"Error reading the CSV file: {e}")
+
+    # Extract the first and last columns
+    try:
+        energy_array_ext = np.array(data.iloc[:, 0])
+        N_tot_ext = np.array(data.iloc[:, -1])
+    except IndexError:
+        raise ValueError("The CSV file does not have the expected structure.")
+
+    return energy_array_ext, N_tot_ext

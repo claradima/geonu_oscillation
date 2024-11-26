@@ -12,6 +12,8 @@ from functions import *
 ###
 ### You can also plot the unscaled spectra by uncommenting some lines
 
+### TO DO :  add description of script
+
 def main():
     # Create the argument parser
     parser = argparse.ArgumentParser(description = "Set global parameters.")
@@ -26,12 +28,14 @@ def main():
     parser.add_argument('-Ebins', type = int, nargs = 1,
                         default = 100, help = 'Specify number of energy bins')
     parser.add_argument('-cgridcount', type = int, nargs = 1,
-                        default = 640,
+                        default = 800,
                         help = 'Specify crust grid count (1d)') #690 for 18km
                                                                 #820 for 15.5 km
+                                                                #635 for 20km
     parser.add_argument('-mgridcount', type = int, nargs = 1,
-                        default = 160, # 30 km for 420
+                        default = 420, # 30 km for 420
                                        # 28 km for 450
+                                       # 60 km for 212
                         help = 'Specify crust grid count (1d)')
     parser.add_argument('-Cshells', type = int, nargs = 1,
                         default = 1, help='Specify number of crust sublayers')
