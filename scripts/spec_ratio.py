@@ -28,24 +28,25 @@ def main():
                         default = 'spec_scaled_standard_osc_params_spec_data_mid_100E20C60M.csv',
                         help = 'Specify the title of the first csv file')
                         # default is dumb here; change to '' TO DO
-    parser.add_argument('-csvtitle1', type=str, nargs=1,
+    parser.add_argument('-csvtitle2', type=str, nargs=1,
                         default='spec_scaled_standard_osc_params_spec_data_mid_100E20C60M.csv',
-                        help='Specify the title of the first csv file')
+                        help='Specify the title of the second csv file')
                         # default is dumb here; change to '' TO DO
     parser.add_argument('-spec_save', type=bool, nargs=1,
-                        default = False,
+                        default = True,
                         help = 'Specify whether to save the spectra')
     parser.add_argument('-plot_show', type=str, nargs=1,
-                        default = True,)
+                        default = False,)
 
     # Parse the arguments
     args = parser.parse_args()
 
 
 
+
     ### TO DO : take input from arg parser for path; hardcode what I need right now
-    energy_array1, N_tot1 = extract_columns(args.csv_title1, path='/home/claramariadima/SNO/geonu_oscillation/plots/sublayer_comparison/20C60M_10DM5EM/mid_100E20C60M')
-    energy_array2, N_tot2 = extract_columns(args.csv_title2, path='/home/claramariadima/SNO/geonu_oscillation/plots/sublayer_comparison/20C60M_2DM1EM/mid_100E20C60M')
+    energy_array1, N_tot1 = extract_columns(args.csvtitle1, path='/home/claramariadima/SNO/geonu_oscillation/plots/sublayer_comparison/20C60M_10DM5EM/mid_100E20C60M')
+    energy_array2, N_tot2 = extract_columns(args.csvtitle2, path='/home/claramariadima/SNO/geonu_oscillation/plots/sublayer_comparison/20C60M_2DM1EM/mid_100E20C60M')
 
     if np.array_equal(energy_array2, energy_array1):
         print('energy arrays are the same; all good!')
@@ -74,8 +75,11 @@ def main():
     plt.legend(loc='lower left')
 
     if args.plot_show:
+        print('showing plot')
         plt.show()
 
-    if args.spec_save():
+    if args.spec_save:
         plt.savefig('Ratio plot.pdf', format='pdf')
 
+if __name__ == "__main__":
+    main()

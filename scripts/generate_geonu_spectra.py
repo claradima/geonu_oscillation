@@ -28,23 +28,23 @@ def main():
     parser.add_argument('-Ebins', type = int, nargs = 1,
                         default = 100, help = 'Specify number of energy bins')
     parser.add_argument('-cgridcount', type = int, nargs = 1,
-                        default = 800,
+                        default = 750,
                         help = 'Specify crust grid count (1d)') #690 for 18km
                                                                 #820 for 15.5 km
                                                                 #635 for 20km
     parser.add_argument('-mgridcount', type = int, nargs = 1,
-                        default = 420, # 30 km for 420
+                        default = 159, # 30 km for 420
                                        # 28 km for 450
                                        # 60 km for 212
                         help = 'Specify crust grid count (1d)')
     parser.add_argument('-Cshells', type = int, nargs = 1,
-                        default = 1, help='Specify number of crust sublayers')
+                        default = 5, help='Specify number of crust sublayers')
     parser.add_argument('-CLMshells', type = int, nargs = 1,
-                        default = 1, help = 'Specify number of crust sublayers')
+                        default = 5, help = 'Specify number of crust sublayers')
     parser.add_argument('-DMshells', type = int, nargs = 1,
-                        default = 25, help = 'Specify number of DM sublayers')
+                        default = 30, help = 'Specify number of DM sublayers')
     parser.add_argument('-EMshells', type = int, nargs = 1,
-                        default = 10, help = 'Specify number of EM sublayers')
+                        default = 15, help = 'Specify number of EM sublayers')
     parser.add_argument('-theta12mid', type = float, nargs = 1,
                         default = 0.5882,
                         help = 'Specify standard value of theta_12 in rad; default = 0.5882 from James/Tony constrained fit')
@@ -255,7 +255,9 @@ def main():
         = add_vol_integrals_const_P_ee(grids_array = crust_points,
                                        grid_1d_size=crust_grid_1d_size,
                                        A_Th = A_Th_c, A_U = A_U_c, rho = rho_c,
-                                       P_ee_mid = 0.5278, P_ee_stdev = 0.0721)
+                                       P_ee_mid = 0.5353, P_ee_stdev = 0.2854)
+    # P_ee_mid = 0.5278, P_ee_stdev = 0.0721 -- old values; need to rerun stuff with adequate averages for each set of
+    # Earth model parameters that I'll be checking
     print(' ')
     print(' ')
     print('CRUST DONE')
@@ -265,7 +267,7 @@ def main():
         = add_vol_integrals_const_P_ee(grids_array=CLM_points,
                                        grid_1d_size=mantle_grid_1d_size,
                                        A_Th=A_Th_CLM, A_U=A_U_CLM, rho=rho_CLM,
-                                       P_ee_mid = 0.5278, P_ee_stdev = 0.0721)
+                                       P_ee_mid = 0.5353, P_ee_stdev = 0.2854)
     print(' ')
     print(' ')
     print('CLM DONE')
@@ -275,7 +277,7 @@ def main():
         = add_vol_integrals_const_P_ee(grids_array=DM_points,
                                        grid_1d_size=mantle_grid_1d_size,
                                        A_Th=A_Th_DM, A_U=A_U_DM, rho=rho_DM,
-                                       P_ee_mid = 0.5278, P_ee_stdev = 0.0721)
+                                       P_ee_mid = 0.5353, P_ee_stdev = 0.2854)
     print(' ')
     print(' ')
     print('DM DONE')
@@ -285,7 +287,7 @@ def main():
         = add_vol_integrals_const_P_ee(grids_array=EM_points,
                                        grid_1d_size=mantle_grid_1d_size,
                                        A_Th=A_Th_EM, A_U=A_U_EM, rho=rho_EM,
-                                       P_ee_mid = 0.5278, P_ee_stdev = 0.0721)
+                                       P_ee_mid = 0.5353, P_ee_stdev = 0.2854)
     print(' ')
     print(' ')
     print('EM DONE')
