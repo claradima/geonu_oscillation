@@ -98,6 +98,53 @@ def cut_shell(inner_rad, outer_rad, sublayers, grid_specs):
 
     return shell_grids
 
+def trim_shell(inner_rad, outer_rad, points_array):
+    print(f'len of initial array: {len(points_array)}')
+    # Compute the squared radii once to avoid redundant calculations
+    inner_rad_sq = inner_rad**2
+    outer_rad_sq = outer_rad**2
+
+    # Use a boolean mask to filter points based on the condition
+    mask = np.sum(points_array**2, axis=1) >= inner_rad_sq
+    mask &= np.sum(points_array**2, axis=1) <= outer_rad_sq
+
+    # Return only the points that satisfy the condition, using the mask
+
+    trimmed_arr = points_array[mask]
+    print(f'len of trimmed array: {len(trimmed_arr)}')
+    del points_array
+    del mask
+    del inner_rad_sq
+    del outer_rad_sq
+
+    return trimmed_arr
+
+### Compute the total volume of a shell
+
+def get_shell_volume(shell_grids, grid_1d_size):
+    dV = grid_1d_size**3
+    print(f'distance between points : {grid_1d_size}')
+    print(f'volume element[km^3] is : {dV}')
+
+    print('computing number of points in shell')
+
+    no_points = 0
+    for i in range(len(shell_grids)):
+        subshell_points = len(shell_grids[i])
+        print(f'there are {subshell_points} points in subshell {i} out of {len(shell_grids)}')
+        no_points += subshell_points
+        print('points from subshell added to sum')
+        print(f'total points (intermediate): {no_points}')
+
+    print(' ')
+    print(f'total number of points in shell : {no_points}')
+
+    volume = dV * no_points
+    print(f'total shell volume : {volume}')
+
+    return no_points, volume
+
+
 
 ### Set abundances and densities for crust, mantle, CLM, DM, EM
 ###
