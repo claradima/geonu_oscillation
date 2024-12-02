@@ -28,19 +28,19 @@ def main():
     parser.add_argument('-Ebins', type = int, nargs = 1,
                         default = 100, help = 'Specify number of energy bins')
     parser.add_argument('-cgridcount', type = int, nargs = 1,
-                        default = 750,
+                        default = 795,
                         help = 'Specify crust grid count (1d)') #690 for 18km
                                                                 #820 for 15.5 km
                                                                 #635 for 20km
     parser.add_argument('-mgridcount', type = int, nargs = 1,
-                        default = 159, # 30 km for 420
+                        default = 231, # 30 km for 420
                                        # 28 km for 450
                                        # 60 km for 212
                         help = 'Specify crust grid count (1d)')
     parser.add_argument('-Cshells', type = int, nargs = 1,
-                        default = 5, help='Specify number of crust sublayers')
+                        default = 10, help='Specify number of crust sublayers')
     parser.add_argument('-CLMshells', type = int, nargs = 1,
-                        default = 5, help = 'Specify number of crust sublayers')
+                        default = 1, help = 'Specify number of crust sublayers')
     parser.add_argument('-DMshells', type = int, nargs = 1,
                         default = 30, help = 'Specify number of DM sublayers')
     parser.add_argument('-EMshells', type = int, nargs = 1,
@@ -61,7 +61,7 @@ def main():
                         default = True,
                         help = 'Specify whether to save the spectra (data in csv files and plots')
     parser.add_argument('-livetime', type = float, nargs = 1,
-                        default = 100,
+                        default = 134,
                         help = 'Specify detector livetime in days; default 100')
     parser.add_argument('-plotshow', type = bool, nargs = 1,
                         default = True,
@@ -82,8 +82,8 @@ def main():
     # Note : don't want these defined globally in case we want to compare
     #        spectra obtained from different abundances
     A_Th_c, A_U_c, A_Th_CLM, A_U_CLM, A_Th_DM, A_U_DM, A_Th_EM, A_U_EM, rho_c, rho_CLM, rho_DM, rho_EM = set_abund(args.abd)
-    print(f'rho_c : {rho_c}')
-    print(A_Th_CLM)
+    #print(f'rho_c : {rho_c}')
+    #print(A_Th_CLM)
     # Setting fixed oscillation parameters
     set_fixed_params()
     # Set values for other 2 parameters
@@ -124,8 +124,11 @@ def main():
 
     # Create crust points; one layer by default
     print('creating 3d grid for crust')
+
     crust_grid_specs, crust_grid_1d_size = create_3d_grid(grid_counts = args.cgridcount)
     print('cutting crust shell from 3d grid')
+    print(f'crust_grid_1d_size : {crust_grid_1d_size}')
+    sys.exit()
 
     crust_points = cut_shell(inner_rad = 6350, outer_rad = 6371, sublayers = 1, grid_specs = crust_grid_specs)
     print(crust_points)
@@ -137,6 +140,55 @@ def main():
     print(' ')
 
     print(crust_points)
+    '''
+
+    csv_filename = f'crust_points_dist_16.04785894206543.csv'
+
+    # Read the CSV file into the crust_points variable
+    crust_points_0 = np.loadtxt(csv_filename, delimiter=",", skiprows=1)  # Skip the header
+    print(f'crust_points_0 : {crust_points_0}')
+
+    print(f"Loaded points from {csv_filename}")
+    get_memory_usage()
+    crust_grid_1d_size = 16.04785894206543
+
+    get_memory_usage()
+    print('ha!')
+    print(f'there are {len(crust_points_0)} crust points')
+    print(f'splitting crust points shell into {args.Cshells} shells')
+    crust_points = split_shell(inner_rad = 6350, outer_rad=6371, sublayers = args.Cshells, points_array_unwrapped=crust_points_0)
+    #crust_points = np.array([crust_points_0])
+    print('deleting initial crust array (unsplit)')
+    get_memory_usage()
+    del crust_points_0
+    print('deleted; gc collecting')
+    gc.collect()
+    print('gc collected')
+    get_memory_usage()
+    '''
+    '''
+    print('checking that we still have the number of total points')
+
+    points_sum = 0
+    for i in range(len(crust_points)):
+        points_sum += len(crust_points[i])
+        print(f'added contribution from subshell {i}')
+    print(f'total points: {points_sum}')
+    sys.exit()
+    '''
+
+
+    '''
+    get_memory_usage()
+    print('haha!')
+    del crust_points_0
+    get_memory_usage()
+    print('hahaha!')
+    print('gc collectiong')
+    gc.collect()
+    print('gc collected')
+    get_memory_usage()
+    '''
 
     # Create mantle points
     print('creating 3d grid for mantle')
@@ -155,6 +207,10 @@ def main():
     print('deleting full mantle grid')
     del mantle_grid_specs
     print('deleted full mantle grid')
+    get_memory_usage()
+    print('gc collectiong')
+    gc.collect()
+    print('gc collected')
     get_memory_usage()
     print(' ')
 
@@ -255,7 +311,7 @@ def main():
         = add_vol_integrals_const_P_ee(grids_array = crust_points,
                                        grid_1d_size=crust_grid_1d_size,
                                        A_Th = A_Th_c, A_U = A_U_c, rho = rho_c,
-                                       P_ee_mid = 0.5353, P_ee_stdev = 0.2854)
+                                       P_ee_mid = 0.546878, P_ee_stdev = 0.2851)
     # P_ee_mid = 0.5278, P_ee_stdev = 0.0721 -- old values; need to rerun stuff with adequate averages for each set of
     # Earth model parameters that I'll be checking
     print(' ')
@@ -267,7 +323,7 @@ def main():
         = add_vol_integrals_const_P_ee(grids_array=CLM_points,
                                        grid_1d_size=mantle_grid_1d_size,
                                        A_Th=A_Th_CLM, A_U=A_U_CLM, rho=rho_CLM,
-                                       P_ee_mid = 0.5353, P_ee_stdev = 0.2854)
+                                       P_ee_mid = 0.546878, P_ee_stdev = 0.2851)
     print(' ')
     print(' ')
     print('CLM DONE')
@@ -277,7 +333,7 @@ def main():
         = add_vol_integrals_const_P_ee(grids_array=DM_points,
                                        grid_1d_size=mantle_grid_1d_size,
                                        A_Th=A_Th_DM, A_U=A_U_DM, rho=rho_DM,
-                                       P_ee_mid = 0.5353, P_ee_stdev = 0.2854)
+                                       P_ee_mid = 0.546878, P_ee_stdev = 0.2851)
     print(' ')
     print(' ')
     print('DM DONE')
@@ -287,7 +343,7 @@ def main():
         = add_vol_integrals_const_P_ee(grids_array=EM_points,
                                        grid_1d_size=mantle_grid_1d_size,
                                        A_Th=A_Th_EM, A_U=A_U_EM, rho=rho_EM,
-                                       P_ee_mid = 0.5353, P_ee_stdev = 0.2854)
+                                       P_ee_mid = 0.546878, P_ee_stdev = 0.2851)
     print(' ')
     print(' ')
     print('EM DONE')
@@ -321,6 +377,7 @@ def main():
               abd_set_2 = args.abd,
               title_prefix_2="Scaled_standard_osc_params",
               title_prefix_1="Scaled_const_Pee")
+    #sys.exit()
 
     ##################################################################################################
 

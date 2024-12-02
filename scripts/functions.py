@@ -35,6 +35,8 @@ def create_3d_grid(grid_counts, halfside = 6371):
     # 160 for 80km spacing
 
     coords = np.linspace(- halfside, halfside, grid_counts)
+    print(f'len(coords) = {len(coords)}')
+    #print(coords)
     grid_1d_size = coords[1] - coords[0]
     print('1d coords created')
     get_memory_usage()
@@ -105,7 +107,7 @@ def trim_shell(inner_rad, outer_rad, points_array):
     outer_rad_sq = outer_rad**2
 
     # Use a boolean mask to filter points based on the condition
-    mask = np.sum(points_array**2, axis=1) >= inner_rad_sq
+    mask = np.sum(points_array**2, axis=1) > inner_rad_sq
     mask &= np.sum(points_array**2, axis=1) <= outer_rad_sq
 
     # Return only the points that satisfy the condition, using the mask
@@ -118,6 +120,30 @@ def trim_shell(inner_rad, outer_rad, points_array):
     del outer_rad_sq
 
     return trimmed_arr
+
+def split_shell(inner_rad, outer_rad, sublayers, points_array_unwrapped):
+    print(f'len of initial array: {len(points_array_unwrapped)}')
+    b_values = np.linspace(inner_rad, outer_rad, sublayers + 1)
+    shell_grids = np.empty(len(b_values) - 1, dtype=object)
+    print(f'len of shell_grids: {len(b_values) - 1}')
+
+    for i in range(len(b_values) - 1):
+        # Use a boolean mask to filter points based on the condition
+        mask = np.sum(points_array_unwrapped ** 2, axis=1) > b_values[i]**2
+        mask &= np.sum(points_array_unwrapped ** 2, axis=1) <= b_values[i + 1]**2
+
+        shell_grids[i] = points_array_unwrapped[mask]
+        #print(f'len of shell_grids[i]: {len(shell_grids[i])}')
+        #print(f'len of mask: {mask}')
+        #print(f'len of shell_grids : {len(shell_grids)}')
+        print(f"Subshell {i + 1} grid done (out of {sublayers}); limits: {b_values[i]} , {b_values[i + 1]}")
+        print()
+
+    del b_values
+    del mask
+    gc.collect()
+
+    return shell_grids
 
 ### Compute the total volume of a shell
 
@@ -356,10 +382,9 @@ def calc_sigma_IBD():
 ###
 ### Write default values for standard oscillation parameters
 
-def Delta_ij(energy_array, points_array, delta_m_ij_squared, SNO_r= np.array([0, 0, 6369])):
-    # Calculate relative distances
-    relative_distance_array = calc_relative_dist(points_array, SNO_r)
-
+def Delta_ij(energy_array, points_array, delta_m_ij_squared, SNO_r= np.array([0, 0, 6369]), relative_distance_array=None):
+    if relative_distance_array is None:
+        print('please provide a relative distance array')
     # Reshape energy_array to perform element-wise division
     energy_array_reshaped = energy_array.reshape(-1, 1)
 
@@ -477,35 +502,62 @@ def avg_dist(crust_grid, CLM_grid, DM_grids, EM_grids, grid_1d_size_crust, grid_
 ### relative distances directly rather than the points array
 ### Can do this because we only care about distance really
 
-def calc_P_ee(points_array, theta_12, delta_m_21_squared):
+def calc_P_ee(points_array, theta_12, delta_m_21_squared, relative_dist_arr):
 
-    relative_distance_array = calc_relative_dist(points_array)
+    #relative_distance_array = calc_relative_dist(points_array)
+    print(f'relative_distance_arr : {relative_dist_arr}')
 
-    Delta_31 = Delta_ij(energy_array, points_array, delta_m_31_squared)
+
+    Delta_31 = Delta_ij(energy_array = energy_array, points_array = points_array,
+                        delta_m_ij_squared=delta_m_31_squared,
+                        SNO_r=np.array([0, 0, 6369]),
+                        relative_distance_array = relative_dist_arr)
     print("Delta_31 computed successfully")
-    Delta_12 = Delta_ij(energy_array, points_array, delta_m_21_squared)
-    print("Delta_12 computed successfully")
+    sin_squared_Delta_31 = np.sin(Delta_31) ** 2
+    print('Delta_31 sin squared computed; deleting Delta_31')
+    get_memory_usage()
+    del Delta_31
+    print('deleted')
+    get_memory_usage()
+    print('gc collecting')
+    gc.collect()
+    print('gc collected')
+    get_memory_usage()
+
+    Delta_21 = Delta_ij(energy_array=energy_array, points_array=points_array,
+                        delta_m_ij_squared=delta_m_21_squared,
+                        SNO_r=np.array([0, 0, 6369]),
+                        relative_distance_array=relative_dist_arr)
+    print("Delta_21 computed successfully")
+    sin_squared_Delta_21 = np.sin(Delta_21) ** 2
+    print('Delta_21 sin squared computed; deleting Delta_21')
+    get_memory_usage()
+    del Delta_21
+    print('deleted')
+    get_memory_usage()
+    print('gc collecting')
+    gc.collect()
+    print('gc collected')
+    get_memory_usage()
+
 
     A = (np.cos(theta_13)) ** 4 * (np.sin(2 * theta_12)) ** 2
     B = np.sin(2 * theta_13) ** 2
 
-    sin_squared_Delta_31 = np.sin(Delta_31) ** 2
-    sin_squared_Delta_12 = np.sin(Delta_12) ** 2
-
-    print("terms computed successfully")
-
-    P_ee = 1 - (A * sin_squared_Delta_12 + B * sin_squared_Delta_31)
+    P_ee = 1 - (A * sin_squared_Delta_21 + B * sin_squared_Delta_31)
     print("P_ee computed successfully")
 
     get_memory_usage()
     print('deleting intermediary quantities after calculating P_ee')
-    del Delta_12
-    del Delta_31
-    del sin_squared_Delta_12
+    del sin_squared_Delta_21
     del sin_squared_Delta_31
     del A
     del B
     print('deleted')
+    get_memory_usage()
+    print('gc collecting')
+    gc.collect()
+    print('gc collected')
     get_memory_usage()
 
     return P_ee
@@ -556,7 +608,8 @@ def vol_integral(points_array, grid_1d_size, theta_12,
     relative_distance_array = calc_relative_dist(points_array)
     print(f'relative_distance_array : {relative_distance_array}') # TEMP
     print("Relative distance array computed successfully")
-    P_ee_array = calc_P_ee(points_array, theta_12, delta_m_21_squared)
+    get_memory_usage()
+    P_ee_array = calc_P_ee(points_array, theta_12, delta_m_21_squared, relative_distance_array)
 
     print("P_ee_array computed successfully")
     print(f'P_ee_array : {P_ee_array}')#TEMP
@@ -582,6 +635,10 @@ def vol_integral(points_array, grid_1d_size, theta_12,
     del P_ee_array
     del relative_distance_array
     print('deleted')
+    get_memory_usage()
+    print('gc collecting')
+    gc.collect()
+    print('gc collected')
     get_memory_usage()
 
     return sum_Th, sum_U
@@ -1322,8 +1379,9 @@ def calc_avg_P_ee_num_den(grids, theta_12, delta_m_21_squared, grid_1d_size, A_T
     numerator_U_total = 0
 
     for i in range(len(grids)):
+        relative_distance_array = calc_relative_dist(grids[i])
         get_memory_usage()
-        P_ee = calc_P_ee(grids[i], theta_12, delta_m_21_squared)
+        P_ee = calc_P_ee(grids[i], theta_12, delta_m_21_squared, relative_distance_array)
         print(f'average P_ee for layer = {np.mean(P_ee)}')
         w_pos_Th, w_pos_U = get_position_weights(grids[i], grid_1d_size, A_Th, A_U, rho)
         w_pos_Th = np.nan_to_num(w_pos_Th, nan=0)
@@ -1338,6 +1396,10 @@ def calc_avg_P_ee_num_den(grids, theta_12, delta_m_21_squared, grid_1d_size, A_T
         del w_pos_Th
         del w_pos_U
         print('deleted')
+        get_memory_usage()
+        print('gc collecting')
+        gc.collect()
+        print('gc collected')
         get_memory_usage()
 
         print(f'numerator_Th_total : {numerator_Th_total}')
@@ -1370,6 +1432,10 @@ def calc_avg_P_ee_num_den(grids, theta_12, delta_m_21_squared, grid_1d_size, A_T
         del w_pos_U
         print('deleted')
         get_memory_usage()
+        print('gc collecting')
+        gc.collect()
+        print('gc collected')
+        get_memory_usage()
 
         print(f'denominator_Th_total : {denominator_Th_total}')
         print(f'denominator_U_total : {denominator_U_total}')
@@ -1387,6 +1453,10 @@ def calc_avg_P_ee_num_den(grids, theta_12, delta_m_21_squared, grid_1d_size, A_T
     del numerator_Th
     print('deleted')
     get_memory_usage()
+    print('gc collecting')
+    gc.collect()
+    print('gc collected')
+    get_memory_usage()
 
 
     return numerator_Th_total, numerator_U_total, denominator_Th_total, denominator_U_total
@@ -1396,8 +1466,8 @@ def calc_avg_P_ee_num_den(grids, theta_12, delta_m_21_squared, grid_1d_size, A_T
 
 def calc_avg_P_ee_num_den_simple(energy_array, points_array, theta_12, theta_13, delta_m_21_squared, grid_1d_size, A_Th, A_U, rho, f_E_Th, f_E_U):
     print('calculating survival probabilities for layer')
-
-    P_ee = calc_P_ee(points_array, theta_12, delta_m_21_squared)
+    relative_distance_array = calc_relative_dist(points_array)
+    P_ee = calc_P_ee(points_array, theta_12, delta_m_21_squared, relative_distance_array)
     print('survival probability computed')
     print('calculating position weights')
 
@@ -1465,9 +1535,9 @@ def calc_var_P_ee_num(grids, theta_12, delta_m_21_squared, grid_1d_size, A_Th, A
     # Process each sublayer individually
     for i, grid in enumerate(grids):
         print(f'Processing layer {i + 1} of {len(grids)}')
-
+        relative_distance_array = calc_relative_dist(grid)
         # Calculate survival probabilities
-        P_ee = calc_P_ee(grid, theta_12, delta_m_21_squared)
+        P_ee = calc_P_ee(grid, theta_12, delta_m_21_squared, relative_distance_array)
         print(f'average P_ee for layer = {np.mean(P_ee)}')
 
         # Compute position weights
@@ -1485,6 +1555,11 @@ def calc_var_P_ee_num(grids, theta_12, delta_m_21_squared, grid_1d_size, A_Th, A
         del w_pos_U
         print('deleted')
         get_memory_usage()
+        print('gc collecting')
+        gc.collect()
+        print('gc collected')
+        get_memory_usage()
+
         # Accumulate totals
         numerator_Th_total += numerator_Th
         numerator_U_total += numerator_U
@@ -1503,9 +1578,9 @@ def calc_var_P_ee_num_v2(grids, theta_12, delta_m_21_squared, grid_1d_size, A_Th
     # Process each sublayer individually
     for i in range(len(grids)):
         print(f'Processing layer {i + 1} of {len(grids)}')
-
+        relative_distance_array = calc_relative_dist(grids[i])
         # Calculate survival probabilities
-        P_ee = calc_P_ee(grids[i], theta_12, delta_m_21_squared)
+        P_ee = calc_P_ee(grids[i], theta_12, delta_m_21_squared, relative_distance_array)
         print(f'average P_ee for layer = {np.mean(P_ee)}')
 
         # Compute position weights
@@ -1523,6 +1598,11 @@ def calc_var_P_ee_num_v2(grids, theta_12, delta_m_21_squared, grid_1d_size, A_Th
         del w_pos_U
         print('deleted')
         get_memory_usage()
+        print('gc collecting')
+        gc.collect()
+        print('gc collected')
+        get_memory_usage()
+
         # Accumulate totals
         numerator_Th_total = numerator_Th_total + numerator_Th
         numerator_U_total += numerator_U
@@ -1536,8 +1616,8 @@ def calc_var_P_ee_num_v2(grids, theta_12, delta_m_21_squared, grid_1d_size, A_Th
 
 def calc_avg_P_ee_num_den_simple(points_array, theta_12, delta_m_21_squared, grid_1d_size, A_Th, A_U, rho, f_E_Th, f_E_U, P_ee_average):
     print('calculating survival probabilities for layer')
-
-    P_ee = calc_P_ee(points_array, theta_12, delta_m_21_squared)
+    relative_distance_array = calc_relative_dist(points_array)
+    P_ee = calc_P_ee(points_array, theta_12, delta_m_21_squared, relative_distance_array)
     print('survival probability computed')
     print('calculating position weights')
 

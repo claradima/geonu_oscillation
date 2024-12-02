@@ -7,6 +7,8 @@ import os
 import argparse
 
 from functions import *
+#from scripts.test_add_points_crust import csv_filename
+
 
 ### NOTES
 ###
@@ -28,23 +30,23 @@ def main():
     parser.add_argument('-Ebins', type = int, nargs = 1,
                         default = 100, help = 'Specify number of energy bins')
     parser.add_argument('-cgridcount', type = int, nargs = 1,
-                        default = 607,
+                        default = 799,
                         help = 'Specify crust grid count (1d)') #690 for 18km
                                                                 #820 for 15.5 km
                                                                 #635 for 20km
     parser.add_argument('-mgridcount', type = int, nargs = 1,
-                        default = 159, # 30 km for 420
+                        default = 231, # 30 km for 420
                                        # 28 km for 450
                                        # 60 km for 212
                         help = 'Specify crust grid count (1d)')
     parser.add_argument('-Cshells', type = int, nargs = 1,
-                        default = 1, help='Specify number of crust sublayers')
+                        default = 10, help='Specify number of crust sublayers')
     parser.add_argument('-CLMshells', type = int, nargs = 1,
                         default = 1, help = 'Specify number of crust sublayers')
     parser.add_argument('-DMshells', type = int, nargs = 1,
-                        default = 20, help = 'Specify number of DM sublayers')
+                        default = 30, help = 'Specify number of DM sublayers')
     parser.add_argument('-EMshells', type = int, nargs = 1,
-                        default = 10, help = 'Specify number of EM sublayers')
+                        default = 15, help = 'Specify number of EM sublayers')
     parser.add_argument('-theta12mid', type = float, nargs = 1,
                         default = 0.5882,
                         help = 'Specify standard value of theta_12 in rad; default = 0.5882 from James/Tony constrained fit')
@@ -61,7 +63,7 @@ def main():
                         default = False,
                         help = 'Specify whether to save the spectra (data in csv files and plots')
     parser.add_argument('-livetime', type = float, nargs = 1,
-                        default = 100,
+                        default = 134,
                         help = 'Specify detector livetime in days; default 100')
     parser.add_argument('-plotshow', type = bool, nargs = 1,
                         default = True,
@@ -123,7 +125,9 @@ def main():
     # Earth model stays the same in this script, except grid spacing
 
     # Create crust points; one layer by default
-    print('creating 3d grid for crust')
+    print('creating 3d grid for crust, for some reason')
+
+
     crust_grid_specs, crust_grid_1d_size = create_3d_grid(grid_counts = args.cgridcount)
     print('cutting crust shell from 3d grid')
 
@@ -135,8 +139,35 @@ def main():
     print('deleted full crust grid')
     get_memory_usage()
     print(' ')
+    '''
+    print('hello')
+    #csv_filename = f"crust_points_dist_8.csv"
+    #csv_filename = 'crust_points_dist_10.064770932069678.csv'
+    csv_filename = f'crust_points_dist_16.04785894206543.csv'
 
+    # Read the CSV file into the crust_points variable
+    crust_points_0 = np.loadtxt(csv_filename, delimiter=",", skiprows=1)  # Skip the header
+    print(f'crust_points_0 : {crust_points_0}')
 
+    print(f"Loaded points from {csv_filename}")
+    get_memory_usage()
+    crust_grid_1d_size = 16.04785894206543
+
+    get_memory_usage()
+    print('ha!')
+    print(f'there are {len(crust_points_0)} crust points')
+    print(f'splitting crust points shell into {args.Cshells} shells')
+    crust_points = split_shell(inner_rad=6350, outer_rad=6371, sublayers=args.Cshells,
+                               points_array_unwrapped=crust_points_0)
+    # crust_points = np.array([crust_points_0])
+    print('deleting initial crust array (unsplit)')
+    get_memory_usage()
+    del crust_points_0
+    print('deleted; gc collecting')
+    gc.collect()
+    print('gc collected')
+
+'''
     # Create mantle points
     print('creating 3d grid for mantle')
     mantle_grid_specs, mantle_grid_1d_size = create_3d_grid(grid_counts = args.mgridcount)

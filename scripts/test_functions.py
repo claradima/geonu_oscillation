@@ -133,7 +133,8 @@ def create_midpoints(points_array, spacing_1d=None, acc=None):
         raise ValueError("Both spacing_1d and acc cannot be None")
 
     if acc is None:
-        acc = spacing_1d * (np.sqrt(3) + (1 / 5))
+        acc = spacing_1d * (np.sqrt(3) + (1 / 10))
+        #acc = spacing_1d * (np.sqrt(3)) * 4
 
     # Build a KDTree for efficient nearest-neighbor search
     tree = cKDTree(points_array)
@@ -246,6 +247,10 @@ def create_midpoints_old(points_array, spacing_1d=None, acc=None):
                 del new_point
                 print('deleted')
                 get_memory_usage()
+                print('gc collecting')
+                gc.collect()
+                print('gc collected')
+                get_memory_usage()
                 print('')
 
     print('done appending points')
@@ -258,6 +263,10 @@ def create_midpoints_old(points_array, spacing_1d=None, acc=None):
     get_memory_usage()
     print('deleting list')
     del added_points_raw_list
+    print('gc collecting')
+    gc.collect()
+    print('gc collected')
+    get_memory_usage()
     print('done; nice!')
 
     return added_points_raw_array

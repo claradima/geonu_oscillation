@@ -21,7 +21,7 @@ def main():
                         default = 100, help = 'Specify number of energy bins')
 
     parser.add_argument('-cgridcount', type = int, nargs = 1,
-                        default = 635,
+                        default = 785,
                         help = 'Specify crust grid count (1d)') #690 for 18km
                                                                 #820 for 15.5 km
                                                                 #635 for 20km
@@ -48,6 +48,8 @@ def main():
     args = parser.parse_args()
 
     # Create crust points; one layer by default
+
+    '''
     print('creating 3d grid for crust')
     crust_grid_specs, crust_grid_1d_size = create_3d_grid(grid_counts=args.cgridcount)
     print('cutting crust shell from 3d grid')
@@ -82,8 +84,37 @@ def main():
     print('deleted full mantle grid')
     get_memory_usage()
     print(' ')
+    '''
+
+    # I want to calculate the volume if we're using the crust array with spacing 8
+
+    # first import the content of the file
+    # Specify the file name (replace with your actual value of crust_grid_1d_size_2)
+    #csv_filename = f"crust_points_dist_8.csv"
+    csv_filename = f"crust_points_dist_16.04785894206543.csv"
+    # Read the CSV file into the crust_points variable
+    crust_points_0 = np.loadtxt(csv_filename, delimiter=",", skiprows=1)  # Skip the header
+    print(f'crust_points_0 : {crust_points_0}')
+
+    print(f"Loaded points from {csv_filename}")
+    get_memory_usage()
+    #crust_grid_1d_size = 8.013836477987297
+    crust_grid_1d_size = 16.04785894206543
+
+    get_memory_usage()
+    print('ha!')
+    crust_points = np.array([crust_points_0])
+    get_memory_usage()
+    print('haha!')
+    del crust_points_0
+    get_memory_usage()
+    print('hahaha!')
+    gc.collect()
+    get_memory_usage()
+
 
     # We have the Earth points now!
+
 
     # added function in functions.py to compute volume of a shell
 
@@ -92,7 +123,7 @@ def main():
     print(f'number of points in crust is : {no_points_c}')
     print(f'total volume of crust is : {volume_c}')
     print(' ')
-
+    '''
     print('computing CLM volume')
     no_points_CLM, volume_CLM = get_shell_volume(CLM_points, mantle_grid_1d_size)
     print(f'number of points in CLM is : {no_points_CLM}')
@@ -120,19 +151,20 @@ def main():
     print(f'number of points in total is : {no_points_tot}')
     volume_tot = volume_c + volume_m
     print(f'total volume of total is : {volume_tot}')
+    '''
 
     print(' ')
     print(' ')
     print(' ')
     print(' ')
 
-    #print(f'SO!!! total crust points : {no_points_c}')
+    print(f'SO!!! total crust points : {no_points_c}')
     #print(f'total mantle points : {no_points_m}')
-    print(f'total total points : {no_points_tot}')
+    #print(f'total total points : {no_points_tot}')
     #print(' ')
-    #print(f'total crust volumes : {volume_c}')
+    print(f'total crust volumes : {volume_c}')
     #print(f'total mantle volumes : {volume_m}')
-    print(f'total total volumes : {volume_tot}')
+    #print(f'total total volumes : {volume_tot}')
 
 
 if __name__ == "__main__":
