@@ -28,17 +28,17 @@ def main():
     parser.add_argument('-Ebins', type = int, nargs = 1,
                         default = 100, help = 'Specify number of energy bins')
     parser.add_argument('-cgridcount', type = int, nargs = 1,
-                        default = 795,
+                        default = 185,
                         help = 'Specify crust grid count (1d)') #690 for 18km
                                                                 #820 for 15.5 km
                                                                 #635 for 20km
     parser.add_argument('-mgridcount', type = int, nargs = 1,
-                        default = 231, # 30 km for 420
+                        default = 159, # 30 km for 420
                                        # 28 km for 450
                                        # 60 km for 212
                         help = 'Specify crust grid count (1d)')
     parser.add_argument('-Cshells', type = int, nargs = 1,
-                        default = 10, help='Specify number of crust sublayers')
+                        default = 1, help='Specify number of crust sublayers')
     parser.add_argument('-CLMshells', type = int, nargs = 1,
                         default = 1, help = 'Specify number of crust sublayers')
     parser.add_argument('-DMshells', type = int, nargs = 1,
@@ -58,7 +58,7 @@ def main():
                         default = 0.18,
                         help = 'Specify error of delta_m_21^2 in eV^2; default = 0.18 from James/Tony constrained fit')
     parser.add_argument('-specsave', type = bool, nargs = 1,
-                        default = True,
+                        default = False,
                         help = 'Specify whether to save the spectra (data in csv files and plots')
     parser.add_argument('-livetime', type = float, nargs = 1,
                         default = 134,
@@ -128,9 +128,9 @@ def main():
     crust_grid_specs, crust_grid_1d_size = create_3d_grid(grid_counts = args.cgridcount)
     print('cutting crust shell from 3d grid')
     print(f'crust_grid_1d_size : {crust_grid_1d_size}')
-    sys.exit()
+    #sys.exit()
 
-    crust_points = cut_shell(inner_rad = 6350, outer_rad = 6371, sublayers = 1, grid_specs = crust_grid_specs)
+    crust_points = cut_shell(inner_rad = 6350, outer_rad = 6371, sublayers = args.Cshells, grid_specs = crust_grid_specs)
     print(crust_points)
     get_memory_usage()
     print('deleting full crust grid')
@@ -138,6 +138,7 @@ def main():
     print('deleted full crust grid')
     get_memory_usage()
     print(' ')
+    #sys.exit()
 
     print(crust_points)
     '''
@@ -297,6 +298,7 @@ def main():
     print('NICE!! We computed spectrum for standard osc params')
     print(' ')
     print(' ')
+    sys.exit()
 
     # TO DO (VERY IMPORTANT) : scaling is messed up!!!!
     # Compute spectrum with constant P_ee

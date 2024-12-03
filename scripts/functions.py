@@ -82,7 +82,18 @@ def cut_shell(inner_rad, outer_rad, sublayers, grid_specs):
     b_values = np.linspace(inner_rad, outer_rad, sublayers + 1)
 
     shell_grids = np.empty(len(b_values) - 1, dtype = object)
-    shell_indices_array = np.empty(len(b_values) - 1, dtype = object)
+    #shell_indices_array = np.empty(len(b_values) - 1, dtype = object)
+    total_points = 0
+
+    # Count elements equal to outer_rad^2
+    outer_rad_sq = outer_rad ** 2
+    equal_to_outer_rad_sq = np.sum(dist_sq == outer_rad_sq)
+    print(f"Number of points on outer boundary : {equal_to_outer_rad_sq}")
+
+    # Count elements equal to inner_rad^2
+    inner_rad_sq = inner_rad ** 2
+    equal_to_inner_rad_sq = np.sum(dist_sq == inner_rad_sq)
+    print(f"Number of points on inner boundary : {equal_to_inner_rad_sq}")
 
     for i in range(len(b_values) - 1):
         # print(i)
@@ -91,12 +102,17 @@ def cut_shell(inner_rad, outer_rad, sublayers, grid_specs):
         shell_grid = np.stack((x_coords[shell_indices], y_coords[shell_indices], z_coords[shell_indices]),
                                    axis=-1)
 
+        total_points += len(shell_grid)
+        print(f'Number of points in subshell : {len(shell_grid)}')
+
         # Store the DM_grid and DM_indices in the object arrays
         shell_grids[i] = shell_grid
-        shell_indices_array[i] = shell_indices
+        #shell_indices_array[i] = shell_indices
                 # good_DM_distances_array[i] = distances_squared[DM_indices]**(0.5)
 
         print(f"Subshell {i + 1} grid done (out of {sublayers}); limits: {b_values[i]} , {b_values[i + 1]}")
+
+    print(f'Total number of points in shell : {total_points}')
 
     return shell_grids
 
@@ -385,6 +401,8 @@ def calc_sigma_IBD():
 def Delta_ij(energy_array, points_array, delta_m_ij_squared, SNO_r= np.array([0, 0, 6369]), relative_distance_array=None):
     if relative_distance_array is None:
         print('please provide a relative distance array')
+        sys.exit()
+
     # Reshape energy_array to perform element-wise division
     energy_array_reshaped = energy_array.reshape(-1, 1)
 
@@ -606,10 +624,37 @@ def vol_integral(points_array, grid_1d_size, theta_12,
     print('test test') #TEMP
     dV = grid_1d_size ** 3
     relative_distance_array = calc_relative_dist(points_array)
+
+    #min_relative_distance = np.min(relative_distance_array)
+    #min_index = np.argmin(relative_distance_array)
+    #print(f"Smallest element in relative_distance_array: {min_relative_distance}, Index: {min_index}")
+
+    if relative_distance_array.size > 0:
+        # Sort the array and find the two smallest elements and their indices
+        sorted_indices = np.argsort(relative_distance_array)
+        min_relative_distance = relative_distance_array[sorted_indices[0]]
+        min_index = sorted_indices[0]
+
+        second_min_relative_distance = None
+        second_min_index = None
+        if len(sorted_indices) > 1:  # Ensure there is a second element
+            second_min_relative_distance = relative_distance_array[sorted_indices[1]]
+            second_min_index = sorted_indices[1]
+
+        print(f"Smallest element: {min_relative_distance}, Index: {min_index}")
+        if second_min_relative_distance is not None:
+            print(f"Second smallest element: {second_min_relative_distance}, Index: {second_min_index}")
+    else:
+        print("Error: relative_distance_array is empty.")
+        #return None  # Or handle as appropriate
+
+
     print(f'relative_distance_array : {relative_distance_array}') # TEMP
     print("Relative distance array computed successfully")
     get_memory_usage()
     P_ee_array = calc_P_ee(points_array, theta_12, delta_m_21_squared, relative_distance_array)
+    print(f'P_ee\'s corresponding to min dist :{P_ee_array[:, min_index]}' )
+    print(f'P_ee\'s corresponding to other min dist :{P_ee_array[:, second_min_index]}')
 
     print("P_ee_array computed successfully")
     print(f'P_ee_array : {P_ee_array}')#TEMP
@@ -670,6 +715,7 @@ def add_vol_integrals(grids_array, grid_1d_size, theta_12, delta_m_21_squared, A
 
     for i in range(len(grids_array)):
         integral_Th, integral_U = vol_integral(grids_array[i], grid_1d_size, theta_12, delta_m_21_squared,A_Th, A_U, rho)
+        print(f'performing vol integral for subshell {i} out of {len(grids_array)}')
         print(f'integral_Th : {integral_Th}')
         print(f'integral_U : {integral_U}')
 
